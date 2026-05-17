@@ -1,4 +1,4 @@
-package gorm
+package orm
 
 import (
 	"errors"
@@ -23,9 +23,6 @@ func mapDBError(err error) error {
 		return nil
 	}
 	if strings.Contains(err.Error(), "UNIQUE") {
-		if strings.Contains(err.Error(), "phone_number") {
-			return coreerr.NewConflict("phone")
-		}
 		if strings.Contains(err.Error(), "username") {
 			return coreerr.NewConflict("username")
 		}
