@@ -1,0 +1,14 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "CGO_ENABLED=1 go build -o ./tmp/main ./cmd/local"
+  bin = "tmp/main"
+  full_bin = "tmp/main"
+  include_ext = ["go", "c", "h"]
+  exclude_dir = ["tmp", "vendor", "data"]
+  poll = true
+  poll_interval = 500
+
+[log]
+  time = true

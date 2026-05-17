@@ -1,0 +1,36 @@
+tmp/
+data/
+
+# Binaries and archives
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go test outputs
+*.test
+*.out
+c.out
+coverage.out
+
+# Go Workspace and Vendor
+go.work
+go.work.sum
+# เปิดบรรทัดล่างนี้ถ้าต้องการละเว้นโฟลเดอร์ vendor (ถ้าไม่ได้ใช้คำสั่ง go mod vendor)
+# vendor/
+
+# IDE and Editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment values
+.env
+.env.local

@@ -1,0 +1,24 @@
+name: ticketing-backend
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ticketing-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - /app/tmp
+      - go_cache:/root/.cache/go-build
+      - go_mod_cache:/go/pkg/mod
+    working_dir: /app
+    command: air
+    environment:
+      - CGO_ENABLED=1
+    restart: unless-stopped
+
+volumes:
+  go_cache:
+  go_mod_cache:
