@@ -1,0 +1,39 @@
+package http
+
+import (
+	"ticketing-system/internal/apperror"
+	"ticketing-system/internal/config"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
+)
+
+func JWTMiddleware(cfg *config.AuthConfig) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		tokenString := c.Cookies("access_token")
+		if tokenString == "" {
+			return apperror.NewUnauthorized("unauthorized: missing access token")
+		}
+
+		// Parse token and verify cryptographic signature against configured secret
+		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+			return []byte(cfg.JWTSecret), nil
+		})
+
+		if err != nil || !token.Valid {
+			return apperror.NewUnauthorized("unauthorized: invalid or expired token")
+		}
+
+		// Extract verified metadata/claims payload
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			return apperror.NewUnauthorized("unauthorized: invalid payload structure")
+		}
+
+		c.Locals("user_id", claims["user_id"])
+		c.Locals("username", claims["username"])
+		c.Locals("role", claims["role"])
+
+		return c.Next()
+	}
+}

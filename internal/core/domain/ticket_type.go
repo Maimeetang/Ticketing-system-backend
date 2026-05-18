@@ -1,4 +1,4 @@
-package model
+package domain
 
 type TicketType struct {
 	ID    uint
