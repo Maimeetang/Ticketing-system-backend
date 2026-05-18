@@ -1,7 +1,7 @@
 package service
 
 import (
-	coreerr "ticketing-system/internal/core/errors"
+	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/model"
 	"ticketing-system/internal/core/repository"
 )
@@ -29,7 +29,7 @@ func validateRole(role string) bool {
 // Business Core logic
 func (s *userServiceImpl) AddUser(user model.User) error {
 	if !validateRole(user.Role) {
-		return coreerr.NewBadRequest("invalid role")
+		return apperror.NewBadRequest("invalid role")
 	}
 	return s.repo.Add(user)
 }
