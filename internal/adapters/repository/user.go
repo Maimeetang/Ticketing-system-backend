@@ -37,12 +37,12 @@ func mapDBError(err error) error {
 	return apperror.NewInternalServerError("database error: " + err.Error())
 }
 
-func (r *GormUserRepository) Add(u domain.User) error {
+func (r *GormUserRepository) Create(u domain.User) error {
 	err := r.db.Create(&u).Error
 	return mapDBError(err)
 }
 
-func (r *GormUserRepository) Edit(u domain.User) error {
+func (r *GormUserRepository) Update(u domain.User) error {
 	result := r.db.Model(&domain.User{}).Where("id = ?", u.ID).Updates(&u)
 
 	if result.Error != nil {
@@ -68,7 +68,7 @@ func (r *GormUserRepository) DeleteByID(id uint) error {
 	return nil
 }
 
-func (r *GormUserRepository) FindByID(id uint) (*domain.User, error) {
+func (r *GormUserRepository) GetByID(id uint) (*domain.User, error) {
 	var user domain.User
 	err := r.db.First(&user, id).Error
 	if err != nil {
@@ -77,7 +77,7 @@ func (r *GormUserRepository) FindByID(id uint) (*domain.User, error) {
 	return &user, nil
 }
 
-func (r *GormUserRepository) FindByUsername(username string) (*domain.User, error) {
+func (r *GormUserRepository) GetByUsername(username string) (*domain.User, error) {
 	var user domain.User
 	err := r.db.Where("username = ?", username).First(&user).Error
 	if err != nil {
@@ -86,7 +86,7 @@ func (r *GormUserRepository) FindByUsername(username string) (*domain.User, erro
 	return &user, nil
 }
 
-func (r *GormUserRepository) List() ([]domain.User, error) {
+func (r *GormUserRepository) GetAll() ([]domain.User, error) {
 	var users []domain.User
 	err := r.db.Find(&users).Error
 	if err != nil {

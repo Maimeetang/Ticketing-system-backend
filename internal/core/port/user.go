@@ -14,10 +14,10 @@ type UserService interface {
 
 // Secondary port
 type UserRepository interface {
-	Add(user domain.User) error
-	Edit(user domain.User) error
+	Create(user domain.User) error
+	Update(user domain.User) error
 	DeleteByID(id uint) error
-	FindByID(id uint) (*domain.User, error)
-	FindByUsername(username string) (*domain.User, error)
-	List() ([]domain.User, error)
+	GetByID(id uint) (*domain.User, error)
+	GetByUsername(username string) (*domain.User, error)
+	GetAll() ([]domain.User, error)
 }

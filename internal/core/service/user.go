@@ -31,7 +31,7 @@ func (s *userServiceImpl) AddUser(user domain.User) error {
 
 	user.Password = string(hashedPassword)
 
-	return s.repo.Add(user)
+	return s.repo.Create(user)
 }
 
 func (s *userServiceImpl) EditUser(user domain.User) error {
@@ -39,7 +39,7 @@ func (s *userServiceImpl) EditUser(user domain.User) error {
 		return apperror.NewBadRequest("invalid role: allowed values are cashier or scanner")
 	}
 
-	return s.repo.Edit(user)
+	return s.repo.Update(user)
 }
 
 func (s *userServiceImpl) DeleteUser(id uint) error {
@@ -47,7 +47,7 @@ func (s *userServiceImpl) DeleteUser(id uint) error {
 }
 
 func (s *userServiceImpl) FindUserByID(id uint) (*domain.User, error) {
-	user, err := s.repo.FindByID(id)
+	user, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (s *userServiceImpl) FindUserByID(id uint) (*domain.User, error) {
 }
 
 func (s *userServiceImpl) FindUserByUsername(username string) (*domain.User, error) {
-	user, err := s.repo.FindByUsername(username)
+	user, err := s.repo.GetByUsername(username)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (s *userServiceImpl) FindUserByUsername(username string) (*domain.User, err
 }
 
 func (s *userServiceImpl) ListUsers() ([]domain.User, error) {
-	return s.repo.List()
+	return s.repo.GetAll()
 }
 
 // helper function
