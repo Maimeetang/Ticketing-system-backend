@@ -22,6 +22,11 @@ func (s *userServiceImpl) AddUser(user domain.User) error {
 		return apperror.NewBadRequest("invalid role: allowed values are cashier or scanner")
 	}
 
+	existingUser, err := s.repo.GetByUsername(user.Username)
+	if err == nil && existingUser != nil {
+		return apperror.NewConflict("username already exists")
+	}
+
 	hashedPassword, err := 
 		bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 
@@ -67,6 +72,6 @@ func (s *userServiceImpl) ListUsers() ([]domain.User, error) {
 }
 
 // helper function
-func validateRole(role string) bool {
-	return role == "scanner" || role == "cashier"
+func validateRole(role domain.UserRole) bool {
+	return role == domain.RoleCashier || role == domain.RoleScanner
 }

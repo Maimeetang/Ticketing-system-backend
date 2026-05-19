@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 	"ticketing-system/internal/adapters/handler/http"
-	"ticketing-system/internal/adapters/repository"
+	"ticketing-system/internal/adapters/repository/orm"
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/config"
 	"ticketing-system/internal/core/domain"
@@ -46,7 +46,7 @@ func main() {
 	log.Println("Database schemas auto-migrated successfully.")
 
 	// 4. Orchestrate Dependency Injection (Wiring layers together)
-	userRepo := repository.NewGormUserRepository(db) // SQLite uses the same GormUserRepository since it is an ORM abstraction layer
+	userRepo := orm.NewGormUserRepository(db) // SQLite uses the same GormUserRepository since it is an ORM abstraction layer
 	
 	userService := service.NewUserService(userRepo)
 	authService := service.NewAuthService(userRepo, cfg)

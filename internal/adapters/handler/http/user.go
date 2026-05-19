@@ -27,7 +27,7 @@ func (h *UserHandler) AddUser(c *fiber.Ctx) error {
 	userDomain := domain.User{
 		Username:    req.Username,
 		Password:    req.Password,
-		Role:        req.Role,
+		Role:        domain.UserRole(req.Role),
 		FirstName:   req.FirstName,
 		LastName:    req.LastName,
 		PhoneNumber: req.PhoneNumber,
@@ -58,7 +58,7 @@ func (h *UserHandler) EditUser(c *fiber.Ctx) error {
 
 	userDomain := domain.User{
 		ID:                 uint(userID),
-		Role:               req.Role,
+		Role:               domain.UserRole(req.Role),
 		FirstName:          req.FirstName,
 		LastName:           req.LastName,
 		PhoneNumber:        req.PhoneNumber,
@@ -100,7 +100,7 @@ func (h *UserHandler) FindUserByID(c *fiber.Ctx) error {
 	res := dto.UserResponse{
 		ID:                 user.ID,
 		Username:           user.Username,
-		Role:               user.Role,
+		Role:               string(user.Role),
 		FirstName:          user.FirstName,
 		LastName:           user.LastName,
 		PhoneNumber:        user.PhoneNumber,
@@ -124,7 +124,7 @@ func (h *UserHandler) FindUserByUsername(c *fiber.Ctx) error {
 	res := dto.UserResponse{
 		ID:                 user.ID,
 		Username:           user.Username,
-		Role:               user.Role,
+		Role:               string(user.Role),
 		FirstName:          user.FirstName,
 		LastName:           user.LastName,
 		PhoneNumber:        user.PhoneNumber,
@@ -146,7 +146,7 @@ func (h *UserHandler) ListUsers(c *fiber.Ctx) error {
 		resList[i] = dto.UserResponse{
 			ID:                 user.ID,
 			Username:           user.Username,
-			Role:               user.Role,
+			Role:               string(user.Role),
 			FirstName:          user.FirstName,
 			LastName:           user.LastName,
 			PhoneNumber:        user.PhoneNumber,
