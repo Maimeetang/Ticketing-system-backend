@@ -1,97 +1,71 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"os"
-	"ticketing-system/internal/adapters/handler/http"
-	"ticketing-system/internal/adapters/repository/orm"
-	"ticketing-system/internal/apperror"
-	"ticketing-system/internal/config"
-	"ticketing-system/internal/core/domain"
-	"ticketing-system/internal/core/service"
+	"os/signal"
+	"strconv"
+	"syscall"
+	"ticketing-system/internal/server"
+	"time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/joho/godotenv"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
+	_ "github.com/joho/godotenv/autoload"
 )
 
+func gracefulShutdown(fiberServer *server.FiberServer, done chan bool) {
+	// Create context that listens for the interrupt signal from the OS.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	// Listen for the interrupt signal from hardware system triggers.
+	<-ctx.Done()
+
+	log.Println("shutting down gracefully, press Ctrl+C again to force closure...")
+	stop() // Allow Ctrl+C to force absolute execution cutoff
+
+	// The context is used to inform the server it has 5 seconds to finish its remaining database transactions.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	if err := fiberServer.ShutdownWithContext(ctx); err != nil {
+		log.Printf("Server forced to shutdown with error: %v", err)
+	}
+
+	log.Println("Server processing loops exited.")
+
+	// Notify the main goroutine thread execution that the shutdown task is finished
+	done <- true
+}
+
 func main() {
-	// Load configurations from .env file
-	if err := godotenv.Load(); err != nil {
-		log.Println("env file missing; system will fall back to environment variables.")
-	}
+	// Spin up configuration initialization, DB layers wiring, and routing setups
+	srv := server.New()
 
-	cfg := config.LoadAuthConfig()
-	appMode := os.Getenv("APP_MODE")
-	if appMode == "" {
-		appMode = "offline" // Default mode
-	}
+	// Create a done communication channel to track termination completeness status
+	done := make(chan bool, 1)
 
-	log.Printf("Initializing Ticketing System in [%s] mode...", appMode)
+	// Execute listening background channel processing threads runtime loop
+	go func() {
+		portStr := os.Getenv("PORT")
+		if portStr == "" {
+			portStr = "8080" // Default port if variable missing
+		}
+		
+		port, _ := strconv.Atoi(portStr)
+		log.Printf("HTTP Web Server running locally on port :%d", port)
+		
+		err := srv.Listen(fmt.Sprintf(":%d", port))
+		if err != nil {
+			log.Fatalf("http server crash execution fault: %s", err)
+		}
+	}()
 
-	// Connect to Local SQLite Database File
-	// It will create 'local_tickets.db' file automatically in root folder if it doesn't exist.
-	db, err := gorm.Open(sqlite.Open("./data/local_tickets.db"), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("Database initialization aborted (SQLite): %v", err)
-	}
-	log.Println("Local SQLite Database connected successfully.")
+	// Activate operational operating-system signals surveillance monitoring thread loop
+	go gracefulShutdown(srv, done)
 
-	// Auto-Migrate Schemas directly through GORM
-	// It will scan domain.User structural constraints and map to SQLite table architecture.
-	if err := db.AutoMigrate(&domain.User{}); err != nil {
-		log.Fatalf("Database schema migration failed: %v", err)
-	}
-	log.Println("Database schemas auto-migrated successfully.")
-
-	// 4. Orchestrate Dependency Injection (Wiring layers together)
-	userRepo := orm.NewGormUserRepository(db) // SQLite uses the same GormUserRepository since it is an ORM abstraction layer
-	
-	userService := service.NewUserService(userRepo)
-	authService := service.NewAuthService(userRepo, cfg)
-
-	userHandler := http.NewUserHandler(userService)
-	authHandler := http.NewAuthHandler(authService, cfg) // Injected cfg to allow dynamic Cookie Secure tuning
-
-	// 5. Initialize Fiber Web Application and Centralized Error Mapping Middleware
-	app := fiber.New(fiber.Config{
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			statusCode := fiber.StatusInternalServerError
-			message := "Internal server fault occurred"
-
-			// Capture internal decoupled application domain errors
-			if appErr, ok := err.(apperror.AppError); ok {
-				statusCode = appErr.StatusCode()
-				message = appErr.Message()
-			} else if fiberErr, ok := err.(*fiber.Error); ok {
-				statusCode = fiberErr.Code
-				message = fiberErr.Message
-			}
-
-			return c.Status(statusCode).JSON(fiber.Map{
-				"status":  "error",
-				"message": message,
-			})
-		},
-	})
-
-	// 6. Register Routing Schema Architecture
-	api := app.Group("/api")
-	
-	// Public Endpoints
-	api.Post("/auth/login", authHandler.Login)
-	api.Post("/auth/logout", authHandler.Logout)
-
-	// Protected Endpoints (Guarded by Cookie Verification Gate)
-	userRoutes := api.Group("/users", http.JWTMiddleware(cfg))
-	
-	userRoutes.Post("/", userHandler.AddUser)
-	userRoutes.Put("/:id", userHandler.EditUser)
-	userRoutes.Delete("/:id", userHandler.DeleteUser)
-	userRoutes.Get("/:id", userHandler.FindUserByID)
-	userRoutes.Get("/", userHandler.ListUsers)
-
-	// 7. Fire up the local web engine
-	log.Fatal(app.Listen(":8000"))
+	// Block processing until completion notification is signaled from channel
+	<-done
+	log.Println("Graceful shutdown sequence completed. Application safe to turn off.")
 }
