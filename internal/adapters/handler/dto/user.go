@@ -1,23 +1,5 @@
 package dto
 
-type CreateUserRequest struct {
-	Username           string `json:"username" validate:"required,min=4"`
-	Password           string `json:"password" validate:"required,min=6"`
-	Role               string `json:"role" validate:"required,oneof=cashier scanner"`
-	FirstName          string `json:"first_name" validate:"required"`
-	LastName           string `json:"last_name" validate:"required"`
-	PhoneNumber        string `json:"phone_number" validate:"required"`
-	ReservePhoneNumber string `json:"reserve_phone_number"`
-}
-
-type UpdateUserRequest struct {
-	Role               string `json:"role" validate:"required,oneof=cashier scanner"`
-	FirstName          string `json:"first_name" validate:"required"`
-	LastName           string `json:"last_name" validate:"required"`
-	PhoneNumber        string `json:"phone_number" validate:"required"`
-	ReservePhoneNumber string `json:"reserve_phone_number"`
-}
-
 type UserResponse struct {
 	ID                 uint   `json:"id"`
 	Username           string `json:"username"`

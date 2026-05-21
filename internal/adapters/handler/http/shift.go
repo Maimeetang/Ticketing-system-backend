@@ -1,9 +1,10 @@
 package http
 
 import (
-	"ticketing-system/internal/adapters/handler/dto"
 	"ticketing-system/internal/apperror"
+	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -31,17 +32,19 @@ func (h *ShiftHandler) ClockIn(c *fiber.Ctx) error {
 		}
 	}
 
-	shift, err := h.shiftService.ClockIn(userID)
+	shift := domain.Shift{
+		UserID:    userID,
+		StartAt:   time.Now(),
+		EndAt:     nil,
+		Status:    domain.ShiftOpen,
+	}
+
+	_, err := h.shiftService.ClockIn(&shift)
 	if err != nil {
 		return err
 	}
 
-	res := dto.ShiftResponse{
-		ID:      shift.ID,
-		UserID:  shift.UserID,
-		StartAt: shift.StartAt,
-		Status:  string(shift.Status),
-	}
+	res := newShiftResponse(&shift)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "shift session opened successfully.",
@@ -89,17 +92,12 @@ func (h *ShiftHandler) GetActiveShift(c *fiber.Ctx) error {
 		}
 	}
 
-	shift, err := h.shiftService.GetActiveShift(userID)
+	shift, err := h.shiftService.GetUserActiveShift(userID)
 	if err != nil {
 		return err
 	}
 
-	res := dto.ShiftResponse{
-		ID:      shift.ID,
-		UserID:  shift.UserID,
-		StartAt: shift.StartAt,
-		Status:  string(shift.Status),
-	}
+	res := newShiftResponse(shift)
 
 	return c.Status(fiber.StatusOK).JSON(res)
 }

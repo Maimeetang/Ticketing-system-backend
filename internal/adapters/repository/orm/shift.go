@@ -18,8 +18,37 @@ func NewGormShiftRepository(db *gorm.DB) port.ShiftRepository {
 	return &GormShiftRepository{db: db}
 }
 
-// mapShiftDBError intercepts structural storage failure states
-func mapShiftDBError(err error) error {
+func (r *GormShiftRepository) CreateShift(shift *domain.Shift) error {
+	err := r.db.Create(shift).Error
+	return handleShiftError(err)
+}
+
+func (r *GormShiftRepository) UpdateShift(shift *domain.Shift) error {
+	// Updates using struct attributes matching primaryKey criteria
+	result := r.db.Model(&domain.Shift{}).Where("id = ?", shift.ID).Updates(shift)
+	if result.Error != nil {
+		return handleShiftError(result.Error)
+	}
+	
+	if result.RowsAffected == 0 {
+		return apperror.NewNotFound("target shift record missing")
+	}
+	return nil
+}
+
+func (r *GormShiftRepository) GetActiveByUserID(userID uint) (*domain.Shift, error) {
+	var shift domain.Shift
+	
+	// Query database to find a shift that belongs to the user and is still 'OPEN'
+	err := r.db.Where("user_id = ? AND status = ?", userID, domain.ShiftOpen).First(&shift).Error
+	if err != nil {
+		return nil, handleShiftError(err)
+	}
+	
+	return &shift, nil
+}
+
+func handleShiftError(err error) error {
 	if err == nil {
 		return nil
 	}
@@ -40,34 +69,4 @@ func mapShiftDBError(err error) error {
 func isForeignKeyViolation(err error) bool {
 	errMsg := strings.ToLower(err.Error())
 	return strings.Contains(errMsg, "foreign key") || strings.Contains(errMsg, "constraint failed")
-}
-
-func (r *GormShiftRepository) Create(shift *domain.Shift) error {
-	err := r.db.Create(shift).Error
-	return mapShiftDBError(err)
-}
-
-func (r *GormShiftRepository) Update(shift *domain.Shift) error {
-	// Updates using struct attributes matching primaryKey criteria
-	result := r.db.Model(&domain.Shift{}).Where("id = ?", shift.ID).Updates(shift)
-	if result.Error != nil {
-		return mapShiftDBError(result.Error)
-	}
-	
-	if result.RowsAffected == 0 {
-		return apperror.NewNotFound("target shift record missing")
-	}
-	return nil
-}
-
-func (r *GormShiftRepository) FindActiveByUserID(userID uint) (*domain.Shift, error) {
-	var shift domain.Shift
-	
-	// Query database to find a shift that belongs to the user and is still 'OPEN'
-	err := r.db.Where("user_id = ? AND status = ?", userID, domain.ShiftOpen).First(&shift).Error
-	if err != nil {
-		return nil, mapShiftDBError(err)
-	}
-	
-	return &shift, nil
 }

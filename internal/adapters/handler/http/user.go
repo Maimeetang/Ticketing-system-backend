@@ -2,7 +2,6 @@ package http
 
 import (
 	"strconv"
-	"ticketing-system/internal/adapters/handler/dto"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
 
@@ -17,14 +16,32 @@ func NewUserHandler(service port.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
 
-func (h *UserHandler) AddUser(c *fiber.Ctx) error {
-	var req dto.CreateUserRequest
+type CreateUserRequest struct {
+	Username           string `json:"username" validate:"required,min=4"`
+	Password           string `json:"password" validate:"required,min=6"`
+	Role               string `json:"role" validate:"required,oneof=cashier scanner"`
+	FirstName          string `json:"first_name" validate:"required"`
+	LastName           string `json:"last_name" validate:"required"`
+	PhoneNumber        string `json:"phone_number" validate:"required"`
+	ReservePhoneNumber string `json:"reserve_phone_number"`
+}
+
+type UpdateUserRequest struct {
+	Role               string `json:"role" validate:"required,oneof=cashier scanner"`
+	FirstName          string `json:"first_name" validate:"required"`
+	LastName           string `json:"last_name" validate:"required"`
+	PhoneNumber        string `json:"phone_number" validate:"required"`
+	ReservePhoneNumber string `json:"reserve_phone_number"`
+}
+
+func (h *UserHandler) Register(c *fiber.Ctx) error {
+	var req CreateUserRequest
 
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request"})
 	}
 
-	userDomain := domain.User{
+	user := domain.User{
 		Username:    req.Username,
 		Password:    req.Password,
 		Role:        domain.UserRole(req.Role),
@@ -34,7 +51,7 @@ func (h *UserHandler) AddUser(c *fiber.Ctx) error {
 		ReservePhoneNumber: req.ReservePhoneNumber,
 	}
 
-	err := h.service.AddUser(userDomain)
+	err := h.service.Register(&user)
 	if err != nil {
 		return err 
 	}
@@ -44,19 +61,19 @@ func (h *UserHandler) AddUser(c *fiber.Ctx) error {
 	})
 }
 
-func (h *UserHandler) EditUser(c *fiber.Ctx) error {
+func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	userID, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid user ID"})
 	}
 
-	var req dto.UpdateUserRequest
+	var req UpdateUserRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request"})
 	}
 
-	userDomain := domain.User{
+	user := domain.User{
 		ID:                 uint(userID),
 		Role:               domain.UserRole(req.Role),
 		FirstName:          req.FirstName,
@@ -65,7 +82,7 @@ func (h *UserHandler) EditUser(c *fiber.Ctx) error {
 		ReservePhoneNumber: req.ReservePhoneNumber,
 	}
 
-	if err := h.service.EditUser(userDomain); err != nil {
+	if err := h.service.UpdateUser(&user); err != nil {
 		return err
 	}
 	
@@ -86,52 +103,20 @@ func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-func (h *UserHandler) FindUserByID(c *fiber.Ctx) error {
+func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid user ID"})
 	}
 
-	user, err := h.service.FindUserByID(uint(id))
+	user, err := h.service.GetUser(uint(id))
 	if err != nil {
 		return err
 	}
 
-	res := dto.UserResponse{
-		ID:                 user.ID,
-		Username:           user.Username,
-		Role:               string(user.Role),
-		FirstName:          user.FirstName,
-		LastName:           user.LastName,
-		PhoneNumber:        user.PhoneNumber,
-		ReservePhoneNumber: user.ReservePhoneNumber,
-	}
+	res := newUserResponse(user)
 
 	return c.Status(fiber.StatusOK).JSON(res)
-}
-
-func (h *UserHandler) FindUserByUsername(c *fiber.Ctx) error {
-	username := c.Params("username")
-	if username == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "username parameter required"})
-	}
-
-	user, err := h.service.FindUserByUsername(username)
-	if err != nil {
-		return err
-	}
-
-	res := dto.UserResponse{
-		ID:                 user.ID,
-		Username:           user.Username,
-		Role:               string(user.Role),
-		FirstName:          user.FirstName,
-		LastName:           user.LastName,
-		PhoneNumber:        user.PhoneNumber,
-		ReservePhoneNumber: user.ReservePhoneNumber,
-	}
-
-	return c.Status(200).JSON(res)
 }
 
 func (h *UserHandler) ListUsers(c *fiber.Ctx) error {
@@ -140,19 +125,11 @@ func (h *UserHandler) ListUsers(c *fiber.Ctx) error {
 		return err
 	}
 
-	// filter password out
-	resList := make([]dto.UserResponse, len(users))
-	for i, user := range users {
-		resList[i] = dto.UserResponse{
-			ID:                 user.ID,
-			Username:           user.Username,
-			Role:               string(user.Role),
-			FirstName:          user.FirstName,
-			LastName:           user.LastName,
-			PhoneNumber:        user.PhoneNumber,
-			ReservePhoneNumber: user.ReservePhoneNumber,
-		}
+	resList := make([]userResponse, len(users))
+	for i := range users {
+		resList[i] = newUserResponse(&users[i])
 	}
+	
 
 	return c.Status(fiber.StatusOK).JSON(resList)
 }

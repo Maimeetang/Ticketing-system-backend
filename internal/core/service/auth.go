@@ -24,7 +24,7 @@ func NewAuthService(userRepo port.UserRepository, cfg *config.AuthConfig) port.A
 
 func (s *authServiceImpl) Login(username, password string) (string, error) {
 	// Get user from repository
-	user, err := s.userRepo.GetByUsername(username)
+	user, err := s.userRepo.GetUserByUsername(username)
 	if err != nil {
 		return "", apperror.NewUnauthorized("The username or password is incorrect.")
 	}

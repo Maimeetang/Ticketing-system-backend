@@ -55,7 +55,7 @@ func CheckActiveShift(shiftService port.ShiftService) fiber.Handler {
 			}
 		}
 
-		activeShift, err := shiftService.GetActiveShift(userID)
+		activeShift, err := shiftService.GetUserActiveShift(userID)
 		if err != nil || activeShift == nil {
 			return apperror.NewForbidden("access denied: you must clock-in to open a working shift session before performing this action")
 		}

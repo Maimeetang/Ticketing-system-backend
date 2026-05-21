@@ -4,20 +4,30 @@ import "ticketing-system/internal/core/domain"
 
 // Primary port
 type UserService interface {
-	AddUser(user domain.User) error
-	EditUser(user domain.User) error
+	// CreateUser registers a new employee
+	Register(user *domain.User) error
+	// UpdateUser updates a user
+	UpdateUser(user *domain.User) error
+	// DeleteUser deletes a user
 	DeleteUser(ID uint) error
-	FindUserByID(ID uint) (*domain.User, error)
-	FindUserByUsername(username string) (*domain.User, error)
+	// GetUser returns a user by id
+	GetUser(ID uint) (*domain.User, error)
+	// ListUsers return a list of all users
 	ListUsers() ([]domain.User, error)
 }
 
 // Secondary port
 type UserRepository interface {
-	Create(user domain.User) error
-	Update(user domain.User) error
-	DeleteByID(id uint) error
-	GetByID(id uint) (*domain.User, error)
-	GetByUsername(username string) (*domain.User, error)
-	GetAll() ([]domain.User, error)
+	// CreateUser inserts a new user into the database
+	CreateUser(user *domain.User) error
+	// UpdateUser updates a user
+	UpdateUser(user *domain.User) error
+	// DeleteUser deletes a user
+	DeleteUser(id uint) error
+	// GetUserByID selects a user by id
+	GetUserByID(id uint) (*domain.User, error)
+	// GetByUsername selects a user by username
+	GetUserByUsername(username string) (*domain.User, error)
+	// ListUsers selects a list of all users
+	ListUsers() ([]domain.User, error)
 }

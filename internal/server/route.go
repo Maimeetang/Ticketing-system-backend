@@ -23,10 +23,10 @@ func (s *FiberServer) RegisterRoutes(
 	// Protected User Administration (Guarded by JWTMiddleware)
 	// ----------------------------------------------------
 	userRoutes := api.Group("/users", http.JWTMiddleware(s.Cfg))
-	userRoutes.Post("/", userHandler.AddUser)
-	userRoutes.Put("/:id", userHandler.EditUser)
+	userRoutes.Post("/", userHandler.Register)
+	userRoutes.Put("/:id", userHandler.UpdateUser)
 	userRoutes.Delete("/:id", userHandler.DeleteUser)
-	userRoutes.Get("/:id", userHandler.FindUserByID)
+	userRoutes.Get("/:id", userHandler.GetUser)
 	userRoutes.Get("/", userHandler.ListUsers)
 
 	// ----------------------------------------------------

@@ -17,12 +17,12 @@ func NewUserService(repo port.UserRepository) port.UserService{
 }
 
 // Business Core logic
-func (s *userServiceImpl) AddUser(user domain.User) error {
+func (s *userServiceImpl) Register(user *domain.User) error {
 	if !validateRole(user.Role) {
 		return apperror.NewBadRequest("invalid role: allowed values are cashier or scanner")
 	}
 
-	existingUser, err := s.repo.GetByUsername(user.Username)
+	existingUser, err := s.repo.GetUserByUsername(user.Username)
 	if err == nil && existingUser != nil {
 		return apperror.NewConflict("username already exists")
 	}
@@ -36,31 +36,23 @@ func (s *userServiceImpl) AddUser(user domain.User) error {
 
 	user.Password = string(hashedPassword)
 
-	return s.repo.Create(user)
+	return s.repo.CreateUser(user)
 }
 
-func (s *userServiceImpl) EditUser(user domain.User) error {
+func (s *userServiceImpl) UpdateUser(user *domain.User) error {
 	if !validateRole(user.Role) {
 		return apperror.NewBadRequest("invalid role: allowed values are cashier or scanner")
 	}
 
-	return s.repo.Update(user)
+	return s.repo.UpdateUser(user)
 }
 
 func (s *userServiceImpl) DeleteUser(id uint) error {
-	return s.repo.DeleteByID(id)
+	return s.repo.DeleteUser(id)
 }
 
-func (s *userServiceImpl) FindUserByID(id uint) (*domain.User, error) {
-	user, err := s.repo.GetByID(id)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
-func (s *userServiceImpl) FindUserByUsername(username string) (*domain.User, error) {
-	user, err := s.repo.GetByUsername(username)
+func (s *userServiceImpl) GetUser(id uint) (*domain.User, error) {
+	user, err := s.repo.GetUserByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +60,7 @@ func (s *userServiceImpl) FindUserByUsername(username string) (*domain.User, err
 }
 
 func (s *userServiceImpl) ListUsers() ([]domain.User, error) {
-	return s.repo.GetAll()
+	return s.repo.ListUsers()
 }
 
 // helper function

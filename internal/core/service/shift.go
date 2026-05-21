@@ -16,43 +16,36 @@ func NewShiftService(repo port.ShiftRepository) port.ShiftService {
 }
 
 // Business Core logic
-func (s *shiftServiceImpl) ClockIn(userID uint) (*domain.Shift, error) {
-	activeShift, err := s.repo.FindActiveByUserID(userID)
+func (s *shiftServiceImpl) ClockIn(shift *domain.Shift) (*domain.Shift, error) {
+	activeShift, err := s.repo.GetActiveByUserID(shift.UserID)
 	if err == nil && activeShift != nil {
 		return nil, apperror.NewConflict("user already has an active working shift session open")
 	}
 
-	newShift := &domain.Shift{
-		UserID:    userID,
-		StartAt:   time.Now(),
-		EndAt:     nil,
-		Status:    domain.ShiftOpen,
-	}
-
-	if err := s.repo.Create(newShift); err != nil {
+	if err := s.repo.CreateShift(shift); err != nil {
 		return nil, err
 	}
 
-	return newShift, nil
+	return shift, nil
 }
 
 func (s *shiftServiceImpl) ClockOut(userID uint) error {
-	activeShift, err := s.repo.FindActiveByUserID(userID)
+	shift, err := s.repo.GetActiveByUserID(userID)
 	if err != nil {
 		return apperror.NewNotFound("no active shift session found for this user to clock out")
 	}
 
 	now := time.Now()
-	activeShift.EndAt = &now
-	activeShift.Status = domain.ShiftClosed
+	shift.EndAt = &now
+	shift.Status = domain.ShiftClosed
 
-	return s.repo.Update(activeShift)
+	return s.repo.UpdateShift(shift)
 }
 
-func (s *shiftServiceImpl) GetActiveShift(userID uint) (*domain.Shift, error) {
-	activeShift, err := s.repo.FindActiveByUserID(userID)
+func (s *shiftServiceImpl) GetUserActiveShift(userID uint) (*domain.Shift, error) {
+	shift, err := s.repo.GetActiveByUserID(userID)
 	if err != nil {
 		return nil, apperror.NewNotFound("no active shift running for this user")
 	}
-	return activeShift, nil
+	return shift, nil
 }
