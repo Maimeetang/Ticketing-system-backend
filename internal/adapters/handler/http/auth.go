@@ -1,7 +1,6 @@
 package http
 
 import (
-	"ticketing-system/internal/adapters/handler/dto"
 	"ticketing-system/internal/config"
 	"ticketing-system/internal/core/port"
 	"time"
@@ -21,8 +20,13 @@ func NewAuthHandler(authService port.AuthService,  cfg *config.AuthConfig) *Auth
 	}
 }
 
+type LoginRequest struct {
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
-	var req dto.LoginRequest
+	var req LoginRequest
 
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request"})
@@ -44,9 +48,8 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		Path:     "/",
 	})
 
-	return c.Status(fiber.StatusOK).JSON(dto.LoginResponse{
-		Message:  "Login success.",
-		Username: req.Username,
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"Message":  "Login success",
 	})
 }
 

@@ -10,23 +10,37 @@ const (
 type UserRole string
 
 const (
-	RoleAdmin   UserRole = "admin"
-	RoleManager UserRole = "manager"
-	RoleCashier UserRole = "cashier"
-	RoleScanner UserRole = "scanner"
+	RoleAdmin   UserRole = "ADMIN"
+	RoleManager UserRole = "MANAGER"
+	RoleCashier UserRole = "CASHIER"
+	RoleScanner UserRole = "SCANNER"
+)
+
+type ShiftStatus string
+
+const (
+	ShiftOpen   ShiftStatus = "OPEN"
+	ShiftClosed ShiftStatus = "CLOSED"
 )
 
 type PaymentMethod string
 
 const (
-	Cash PaymentMethod = "cash"
-	Epay PaymentMethod = "epay"
+	Cash PaymentMethod = "CASH"
+	Epay PaymentMethod = "EPAY"
+)
+
+type OrderStatus string
+
+const (
+	OrderStatusPaid      OrderStatus   = "PAID"
+	OrderStatusCancelled PaymentMethod = "CANCELLED"
 )
 
 type TicketStatus string
 
 const (
-	TicketUnused    TicketStatus = "UNUSED"
+	TicketActive    TicketStatus = "ACTIVE"
 	TicketUsed      TicketStatus = "USED"
 	TicketCancelled TicketStatus = "CANCELLED"
 )

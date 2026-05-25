@@ -5,68 +5,100 @@ import (
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
-	"time"
-
-	"github.com/google/uuid"
+	"ticketing-system/internal/core/util"
 )
 
 type orderServiceImpl struct {
-	repo port.OrderRepository
+	orderRepo port.OrderRepository
+	ticketTypeRepo port.TicketTypeRepository
 }
 
-func NewOrderService(repo port.OrderRepository) port.OrderService {
-	return &orderServiceImpl{repo: repo}
+func NewOrderService(orderRepo port.OrderRepository, ticketTypeRepo port.TicketTypeRepository) port.OrderService {
+	return &orderServiceImpl{orderRepo, ticketTypeRepo}
 }
 
-func (s *orderServiceImpl) CreateOrder(userID uint, shiftID uint, paymentMethod domain.PaymentMethod, inputItems []domain.OrderItem) (*domain.Order, error) {
-	if len(inputItems) == 0 {
-		return nil, apperror.NewBadRequest("cannot process empty order items")
-	}
+func (s *orderServiceImpl) CreateOrder(order *domain.Order) (*domain.Order, error) {
+	var orderTotalPrice float64
 
-	var totalAmount float64
-	var finalOrderItems []domain.OrderItem
+	for i := range order.Tickets {
+		ticket := &order.Tickets[i]
 
-	// Verify product prices and calculate amounts securely
-	for _, item := range inputItems {
-		if item.Quantity <= 0 {
-			return nil, apperror.NewBadRequest("item quantity must be greater than zero")
+		ticket.TicketCode = util.GenerateTicketCode(order.CashierID)
+		ticket.Status = domain.TicketActive
+		
+		var ticketTotalPrice float64
+
+		for j := range ticket.TicketInfos {
+			info := &ticket.TicketInfos[j]
+
+			price, err := s.ticketTypeRepo.GetTicketPrice(info.TicketTypeID)
+			if err != nil {
+				return nil, err
+			}
+
+			info.PricePerUnit = price
+
+			currentSum := price * float64(info.Quantity)
+			ticketTotalPrice += currentSum
+			orderTotalPrice += currentSum
 		}
+		ticket.TotalPrice = ticketTotalPrice
 
-		// Fetch official ticket configuration from master table to get genuine unit price
-		ticketType, err := s.repo.GetTicketTypeByID(item.TicketTypeID)
-		if err != nil {
-			return nil, apperror.NewBadRequest(fmt.Sprintf("invalid ticket type ID: %d", item.TicketTypeID))
+		ticket.TicketLogs = append(ticket.TicketLogs, domain.TicketLog{
+			FromStatus:  nil,
+			ToStatus:    domain.TicketActive,
+			TriggeredBy: order.CashierID,
+			Remarks:     "Ticket has benn created",
+		})
+	}
+	order.TotalPrice = orderTotalPrice
+	order.Status = domain.OrderStatusPaid
+
+	return s.orderRepo.CreateOrder(order)
+}
+
+func (s *orderServiceImpl) GetOrderByID(id uint) (*domain.Order, error) {
+	return s.orderRepo.GetOrderByID(id)
+}
+
+func (s *orderServiceImpl) ListOrders() ([]domain.Order, error) {
+	return s.orderRepo.ListOrders()
+}
+
+func (s *orderServiceImpl) CancelOrder(id uint, userID uint) error {
+	order, err := s.orderRepo.GetOrderByID(id)
+	if err != nil {
+		return err
+	}
+	if order == nil {
+		return apperror.NewNotFound("order not found.")
+	}
+
+	for _, ticket := range order.Tickets {
+		if ticket.Status == domain.TicketUsed {
+			return apperror.NewConflict(fmt.Sprintf("cannot cancel order: ticket %s has already been used", ticket.TicketCode))
 		}
-
-		subtotal := ticketType.Price * float64(item.Quantity)
-		totalAmount += subtotal
-
-		orderItem := domain.OrderItem{
-			TicketTypeID: ticketType.ID,
-			Quantity:     item.Quantity,
-			UnitPrice:    ticketType.Price,
-			Subtotal:     subtotal,
-		}
-		finalOrderItems = append(finalOrderItems, orderItem)
 	}
 
-	// Instantiate structural Order document schema with dynamic UUID
-	newOrder := &domain.Order{
-		UUID:          uuid.New().String(), // Ensure unique index identifier across distributed POS machines
-		ShiftID:       shiftID,
-		TotalAmount:   totalAmount,
-		PaymentMethod: paymentMethod,
-		SyncStatus:    domain.SyncPending,
-		CreatedBy:     userID,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-		OrderItems:    finalOrderItems,
+	for i := range order.Tickets {
+		ticket := &order.Tickets[i]
+		
+		oldStatus := ticket.Status 
+		ticket.Status = domain.TicketCancelled
+
+		ticket.TicketLogs = append(ticket.TicketLogs, domain.TicketLog{
+			FromStatus:  &oldStatus,
+			ToStatus:    ticket.Status,
+			TriggeredBy: userID,
+			Remarks:     "Ticket has benn cancelled",
+		})
 	}
 
-	// Persist into database storage layer
-	if err := s.repo.Create(newOrder); err != nil {
-		return nil, err
+	order.Status = domain.OrderStatus(domain.OrderStatusCancelled)
+	
+	_, err = s.orderRepo.UpdateOrder(order)
+	if err != nil {
+		return err
 	}
-
-	return newOrder, nil
+	return nil
 }
