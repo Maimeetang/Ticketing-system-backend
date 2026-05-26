@@ -18,10 +18,6 @@ func NewUserService(repo port.UserRepository) port.UserService{
 
 // Business Core logic
 func (s *userServiceImpl) Register(user *domain.User) error {
-	if !validateRole(user.Role) {
-		return apperror.NewBadRequest("invalid role: allowed values are cashier or scanner")
-	}
-
 	existingUser, err := s.repo.GetUserByUsername(user.Username)
 	if err == nil && existingUser != nil {
 		return apperror.NewConflict("username already exists")
@@ -40,10 +36,6 @@ func (s *userServiceImpl) Register(user *domain.User) error {
 }
 
 func (s *userServiceImpl) UpdateUser(user *domain.User) error {
-	if !validateRole(user.Role) {
-		return apperror.NewBadRequest("invalid role: allowed values are cashier or scanner")
-	}
-
 	return s.repo.UpdateUser(user)
 }
 
@@ -61,9 +53,4 @@ func (s *userServiceImpl) GetUser(id uint) (*domain.User, error) {
 
 func (s *userServiceImpl) ListUsers() ([]domain.User, error) {
 	return s.repo.ListUsers()
-}
-
-// helper function
-func validateRole(role domain.UserRole) bool {
-	return role == domain.RoleCashier || role == domain.RoleScanner
 }

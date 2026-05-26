@@ -19,7 +19,7 @@ func NewUserHandler(service port.UserService) *UserHandler {
 type CreateUserRequest struct {
 	Username           string `json:"username" validate:"required,min=4"`
 	Password           string `json:"password" validate:"required,min=6"`
-	Role               string `json:"role" validate:"required,oneof=cashier scanner"`
+	Role               string `json:"role" validate:"required,oneof=CASHIER SCANNER"`
 	FirstName          string `json:"first_name" validate:"required"`
 	LastName           string `json:"last_name" validate:"required"`
 	PhoneNumber        string `json:"phone_number" validate:"required"`
@@ -27,18 +27,24 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Role               string `json:"role" validate:"required,oneof=cashier scanner"`
+	Role               string `json:"role" validate:"required,oneof=CASHIER SCANNER"`
 	FirstName          string `json:"first_name" validate:"required"`
 	LastName           string `json:"last_name" validate:"required"`
 	PhoneNumber        string `json:"phone_number" validate:"required"`
 	ReservePhoneNumber string `json:"reserve_phone_number"`
 }
 
+func reqValidation()
+
 func (h *UserHandler) Register(c *fiber.Ctx) error {
 	var req CreateUserRequest
 
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request"})
+	}
+	
+	if err := ValidateStruct(&req); err != nil {
+		return err
 	}
 
 	user := domain.User{
@@ -71,6 +77,10 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	var req UpdateUserRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request"})
+	}
+
+	if err := ValidateStruct(&req); err != nil {
+		return err
 	}
 
 	user := domain.User{

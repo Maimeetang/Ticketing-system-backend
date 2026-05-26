@@ -56,9 +56,14 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 		}
 	}
 
+	// logic
 	var req CreateOrderRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid order request body"})
+	}
+
+	if err := ValidateStruct(&req); err != nil {
+		return err
 	}
 
 	order := &domain.Order{
