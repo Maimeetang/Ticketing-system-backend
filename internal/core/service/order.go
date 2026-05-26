@@ -90,7 +90,7 @@ func (s *orderServiceImpl) CancelOrder(id uint, userID uint) error {
 			FromStatus:  &oldStatus,
 			ToStatus:    ticket.Status,
 			TriggeredBy: userID,
-			Remarks:     "Ticket has benn cancelled",
+			Remarks:     "Ticket has been cancelled",
 		})
 	}
 

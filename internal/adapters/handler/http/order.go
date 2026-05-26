@@ -1,6 +1,7 @@
 package http
 
 import (
+	"strconv"
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
@@ -88,3 +89,22 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 	})
 }
 
+func (h *OrderHandler) GetOrderByID(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	id, err := strconv.ParseUint(idParam, 10, 32)
+	if err != nil {
+		return apperror.NewBadRequest("invalid order id format")
+	}
+
+	order, err := h.orderService.GetOrderByID(uint(id))
+	if err != nil {
+		return err
+	}
+	if order == nil {
+		return apperror.NewNotFound("order not found.")
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": order,
+	})
+}
