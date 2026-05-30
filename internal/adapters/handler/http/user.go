@@ -34,8 +34,6 @@ type UpdateUserRequest struct {
 	ReservePhoneNumber string `json:"reserve_phone_number"`
 }
 
-func reqValidation()
-
 func (h *UserHandler) Register(c *fiber.Ctx) error {
 	var req CreateUserRequest
 
@@ -96,7 +94,7 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 		return err
 	}
 	
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "user has been update.",
 	})
 }

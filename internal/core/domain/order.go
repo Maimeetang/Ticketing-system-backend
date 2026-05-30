@@ -13,3 +13,16 @@ type Order struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }
+
+type OrderFilter struct {
+	Status         *OrderStatus
+	PaymentMethod  *PaymentMethod
+	CashierID      *uint
+	ShiftID        *uint
+	From      	   *time.Time
+	To	           *time.Time
+	Page           int
+	Limit          int
+	IncludeTickets bool
+	Sort           string
+}

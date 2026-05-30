@@ -9,20 +9,22 @@ func (s *FiberServer) RegisterRoutes(
 	userHandler *http.UserHandler,
 	authHandler *http.AuthHandler,
 	shiftHandler *http.ShiftHandler,
+	orderHandler *http.OrderHandler,
 ) {
 	// Root API Group
-	api := s.App.Group("/api")
-
 	// ----------------------------------------------------
 	// Public Authentication Routes (Open Access Grid)
 	// ----------------------------------------------------
-	api.Post("/auth/login", authHandler.Login)
-	api.Post("/auth/logout", authHandler.Logout)
+	auth := s.App.Group("/auth")
+	auth.Post("/login", authHandler.Login)
+	auth.Post("/logout", authHandler.Logout)
+
+	s.App.Use(http.AuthRequired(s.Cfg))
 
 	// ----------------------------------------------------
-	// Protected User Administration (Guarded by JWTMiddleware)
+	// Protected User Administration (Guarded by role)
 	// ----------------------------------------------------
-	userRoutes := api.Group("/users", http.JWTMiddleware(s.Cfg))
+	userRoutes := s.App.Group("/users")
 	userRoutes.Post("/", userHandler.Register)
 	userRoutes.Put("/:id", userHandler.UpdateUser)
 	userRoutes.Delete("/:id", userHandler.DeleteUser)
@@ -30,16 +32,18 @@ func (s *FiberServer) RegisterRoutes(
 	userRoutes.Get("/", userHandler.ListUsers)
 
 	// ----------------------------------------------------
-	// Protected Shift Session Pipelines (Guarded by JWTMiddleware)
+	// Protected Shift Session Pipelines
 	// ----------------------------------------------------
-	shiftRoutes := api.Group("/shifts", http.JWTMiddleware(s.Cfg))
-	shiftRoutes.Post("/clock-in", shiftHandler.ClockIn)
-	shiftRoutes.Post("/clock-out", shiftHandler.ClockOut)
+	shiftRoutes := s.App.Group("/shifts")
+	shiftRoutes.Post("/start", shiftHandler.ClockIn)
+	shiftRoutes.Post("/end", shiftHandler.ClockOut)
 	shiftRoutes.Get("/active", shiftHandler.GetActiveShift)
 
 	// ----------------------------------------------------
-	// Protected Orders & Sales Module (Chained with Shift verification Gate)
+	// Protected Orders & Sales Module
 	// ----------------------------------------------------
-	// orderRoutes := api.Group("/orders", http.JWTMiddleware(s.Cfg), http.CheckActiveShift(shiftService))
-	// orderRoutes.Post("/", orderHandler.CreateOrder)
+	orderRoutes := s.App.Group("/orders")
+	orderRoutes.Post("/", orderHandler.CreateOrder)
+	orderRoutes.Get("/:id", orderHandler.GetOrderByID)
+	orderRoutes.Get("/", orderHandler.ListOrders)
 }

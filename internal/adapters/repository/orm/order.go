@@ -2,6 +2,7 @@ package orm
 
 import (
 	"errors"
+	"strings"
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
@@ -27,20 +28,60 @@ func (r *GormOrderRepository) CreateOrder(order *domain.Order) (*domain.Order, e
 
 func (r *GormOrderRepository) GetOrderByID(id uint) (*domain.Order, error) {
 	var order domain.Order
-	err := r.db.First(&order, id).Error
+	err := r.db.Preload("Tickets").
+				Preload("Tickets.TicketInfos").
+				Preload("Tickets.TicketLogs").
+				First(&order, id).Error
 	if err != nil {
 		return nil, handleOrderError(err)
 	}
 	return &order, nil
 }
 
-func (r *GormOrderRepository) ListOrders() ([]domain.Order, error) {
+func (r *GormOrderRepository) ListOrders(filter domain.OrderFilter) ([]domain.Order, int64, error) {
 	var orders []domain.Order
-	err := r.db.Find(&orders).Error
-	if err != nil {
-		return nil, handleOrderError(err)
+	var totalCount int64
+
+	// initial query
+	query := r.db.Model(&domain.Order{})
+	if filter.IncludeTickets{
+		query = query.Preload("Tickets").Preload("Tickets.TicketInfos")
 	}
-	return orders, nil
+
+	// add filters to query
+	if filter.Status != nil {
+		query = query.Where("status = ?", *filter.Status)
+	}
+	if filter.PaymentMethod != nil {
+		query = query.Where("payment_method = ?", *filter.PaymentMethod)
+	}
+	if filter.CashierID != nil {
+		query = query.Where("cashier_id = ?", *filter.CashierID)
+	}
+	if filter.ShiftID != nil {
+		query = query.Where("shift_id = ?", *filter.ShiftID)
+	}
+
+	if err := query.Count(&totalCount).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// sort
+	sort := "created_at DESC"
+	if strings.ToUpper(filter.Sort) == "ASC" {
+		sort = "created_at ASC"
+	}
+
+	// List orders
+	offset := (filter.Page - 1) * filter.Limit
+	err := query.Order(sort).
+		Limit(filter.Limit).Offset(offset).Find(&orders).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return orders, totalCount, nil
 }
 
 func (r *GormOrderRepository) UpdateOrder(order *domain.Order) (*domain.Order, error) {

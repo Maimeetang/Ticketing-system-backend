@@ -31,7 +31,15 @@ func New() *FiberServer {
 	}
 
 	// Execute AutoMigrate constraints to secure storage tables
-	if err := db.AutoMigrate(&domain.User{}, &domain.Shift{}); err != nil {
+	if err := db.AutoMigrate(
+		&domain.User{}, 
+		&domain.Shift{}, 
+		&domain.Order{}, 
+		&domain.Ticket{}, 
+		&domain.TicketInfo{}, 
+		&domain.TicketLog{},
+		&domain.TicketType{},
+	); err != nil {
 		log.Fatalf("database schemas auto-migration failed: %v", err)
 	}
 
@@ -46,6 +54,12 @@ func New() *FiberServer {
 	shiftRepo := orm.NewGormShiftRepository(db)
 	shiftService := service.NewShiftService(shiftRepo)
 	shiftHandler := http.NewShiftHandler(shiftService)
+
+	ticketTypeRepo := orm.NewGormTicketTypeRepository(db)
+
+	orderRepo := orm.NewGormOrderRepository(db)
+	orderService := service.NewOrderService(orderRepo, ticketTypeRepo)
+	orderHandler := http.NewOrderHandler(orderService, shiftService)
 
 	// Build Fiber application engine with centralized error interceptor
 	app := fiber.New(fiber.Config{
@@ -74,7 +88,7 @@ func New() *FiberServer {
 		Cfg: cfg,
 	}
 
-	server.RegisterRoutes(userHandler, authHandler, shiftHandler)
+	server.RegisterRoutes(userHandler, authHandler, shiftHandler, orderHandler)
 
 	return server
 }

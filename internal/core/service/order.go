@@ -31,14 +31,14 @@ func (s *orderServiceImpl) CreateOrder(order *domain.Order) (*domain.Order, erro
 		for j := range ticket.TicketInfos {
 			info := &ticket.TicketInfos[j]
 
-			price, err := s.ticketTypeRepo.GetTicketPrice(info.TicketTypeID)
+			ticketType, err := s.ticketTypeRepo.GetByID(info.TicketTypeID)
 			if err != nil {
 				return nil, err
 			}
 
-			info.PricePerUnit = price
+			info.PricePerUnit = ticketType.Price
 
-			currentSum := price * float64(info.Quantity)
+			currentSum := ticketType.Price * float64(info.Quantity)
 			ticketTotalPrice += currentSum
 			orderTotalPrice += currentSum
 		}
@@ -61,8 +61,14 @@ func (s *orderServiceImpl) GetOrderByID(id uint) (*domain.Order, error) {
 	return s.orderRepo.GetOrderByID(id)
 }
 
-func (s *orderServiceImpl) ListOrders() ([]domain.Order, error) {
-	return s.orderRepo.ListOrders()
+func (s *orderServiceImpl) ListOrders(filter domain.OrderFilter) ([]domain.Order, int64, error) {
+	if filter.Page < 1 {
+		filter.Page = 1
+	}
+	if filter.Limit <= 0 {
+		filter.Limit = 50
+	}
+	return s.orderRepo.ListOrders(filter)
 }
 
 func (s *orderServiceImpl) CancelOrder(id uint, userID uint) error {
@@ -97,8 +103,5 @@ func (s *orderServiceImpl) CancelOrder(id uint, userID uint) error {
 	order.Status = domain.OrderStatus(domain.OrderStatusCancelled)
 	
 	_, err = s.orderRepo.UpdateOrder(order)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
