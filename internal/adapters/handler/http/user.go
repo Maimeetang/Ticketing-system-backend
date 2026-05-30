@@ -16,6 +16,7 @@ func NewUserHandler(service port.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
 
+// dto
 type CreateUserRequest struct {
 	Username           string `json:"username" validate:"required,min=4"`
 	Password           string `json:"password" validate:"required,min=6"`
@@ -27,6 +28,7 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
+	Username           string `json:"username" validate:"required,min=4"`
 	Role               string `json:"role" validate:"required,oneof=CASHIER SCANNER"`
 	FirstName          string `json:"first_name" validate:"required"`
 	LastName           string `json:"last_name" validate:"required"`
@@ -34,6 +36,7 @@ type UpdateUserRequest struct {
 	ReservePhoneNumber string `json:"reserve_phone_number"`
 }
 
+// POST /users
 func (h *UserHandler) Register(c *fiber.Ctx) error {
 	var req CreateUserRequest
 
@@ -65,6 +68,7 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	})
 }
 
+// PUT /users/:id
 func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	userID, err := strconv.ParseUint(idParam, 10, 32)
@@ -82,11 +86,12 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	}
 
 	user := domain.User{
-		ID:                 uint(userID),
-		Role:               domain.UserRole(req.Role),
-		FirstName:          req.FirstName,
-		LastName:           req.LastName,
-		PhoneNumber:        req.PhoneNumber,
+		ID:			 uint(userID),
+		Username:    req.Username,
+		Role:        domain.UserRole(req.Role),
+		FirstName:   req.FirstName,
+		LastName:    req.LastName,
+		PhoneNumber: req.PhoneNumber,
 		ReservePhoneNumber: req.ReservePhoneNumber,
 	}
 
@@ -99,6 +104,7 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	})
 }
 
+// DeleteUser
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {

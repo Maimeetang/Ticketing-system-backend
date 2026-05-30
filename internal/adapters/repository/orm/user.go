@@ -24,7 +24,16 @@ func (r *GormUserRepository) CreateUser(u *domain.User) error {
 }
 
 func (r *GormUserRepository) UpdateUser(u *domain.User) error {
-	result := r.db.Model(&domain.User{}).Where("id = ?", u.ID).Updates(u)
+	update := map[string]interface{}{
+		"username":             u.Username,
+		"role":                 u.Role,
+		"first_name":           u.FirstName,
+		"last_name":            u.LastName,
+		"phone_number":         u.PhoneNumber,
+		"reserve_phone_number": u.ReservePhoneNumber,
+	}
+
+	result := r.db.Model(&domain.User{}).Where("id = ?", u.ID).Updates(update)
 
 	if result.Error != nil {
 		return handleUserError(result.Error)
@@ -82,7 +91,7 @@ func handleUserError(err error) error {
 	}
 	
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return apperror.NewNotFound(err.Error())
+		return apperror.NewNotFound("user")
 	}
 
 	if strings.Contains(strings.ToUpper(err.Error()), "UNIQUE") {
