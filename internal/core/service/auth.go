@@ -4,10 +4,10 @@ import (
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/config"
 	"ticketing-system/internal/core/port"
+	"ticketing-system/internal/core/util"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type authServiceImpl struct {
@@ -30,7 +30,7 @@ func (s *authServiceImpl) Login(username, password string) (string, error) {
 	}
 
 	// Check password
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	err = util.ComparePassword(password, user.Password)
 	if err != nil {
 		return "", apperror.NewUnauthorized("The username or password is incorrect.")
 	}
