@@ -91,7 +91,7 @@ func handleUserError(err error) error {
 	}
 	
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return apperror.NewNotFound("user")
+		return nil
 	}
 
 	if strings.Contains(strings.ToUpper(err.Error()), "UNIQUE") {

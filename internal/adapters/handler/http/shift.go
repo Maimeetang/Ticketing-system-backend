@@ -97,6 +97,10 @@ func (h *ShiftHandler) GetActiveShift(c *fiber.Ctx) error {
 		return err
 	}
 
+	if shift == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "shift not found"})
+	}
+
 	res := newShiftResponse(shift)
 
 	return c.Status(fiber.StatusOK).JSON(res)

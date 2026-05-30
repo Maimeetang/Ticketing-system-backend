@@ -54,7 +54,7 @@ func handleShiftError(err error) error {
 	}
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return apperror.NewNotFound("shift records not found")
+		return nil
 	}
 
 	// Capture foreign key constraint validation failure (e.g., clocking in a non-existent user)

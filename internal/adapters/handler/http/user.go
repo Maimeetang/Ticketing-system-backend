@@ -128,6 +128,10 @@ func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 		return err
 	}
 
+	if user == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "user not found"})
+	}
+
 	res := newUserResponse(user)
 
 	return c.Status(fiber.StatusOK).JSON(res)
