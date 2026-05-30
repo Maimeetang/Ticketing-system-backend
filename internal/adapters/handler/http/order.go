@@ -24,17 +24,17 @@ func NewOrderHandler(orderService port.OrderService, shiftService port.ShiftServ
 
 // dto
 type CreateOrderRequest struct {
-	PaymentMethod domain.PaymentMethod  `json:"payment_method" binding:"required"`
-	Tickets       []CreateTicketRequest `json:"tickets" binding:"required,dive"`
+	PaymentMethod domain.PaymentMethod  `json:"payment_method" validate:"required"`
+	Tickets       []CreateTicketRequest `json:"tickets" validate:"required,dive"`
 }
 
 type CreateTicketRequest struct {
-	TicketInfo []CreateTicketInfoRequest `json:"ticket_info" binding:"required,dive"`
+	TicketInfo []CreateTicketInfoRequest `json:"ticket_info" validate:"required,dive"`
 }
 
 type CreateTicketInfoRequest struct {
-	TicketTypeID uint `json:"ticket_type_id" binding:"required,gt=0"`
-	Quantity     int  `json:"quantity" binding:"required,gt=0"`
+	TicketTypeID uint `json:"ticket_type_id" validate:"required,gt=0"`
+	Quantity     int  `json:"quantity" validate:"gt=0"`
 }
 
 // CreateOrder

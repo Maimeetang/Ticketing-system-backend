@@ -97,7 +97,7 @@ func handleOrderError(err error) error {
 		return nil
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return apperror.NewNotFound("requested database records not found")
+		return apperror.NewNotFound("requested database records order not found")
 	}
 	return apperror.NewInternalServerError("database error: " + err.Error())
 }
