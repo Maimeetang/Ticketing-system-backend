@@ -36,6 +36,10 @@ func (s *orderServiceImpl) CreateOrder(order *domain.Order) (*domain.Order, erro
 				return nil, err
 			}
 
+			if ticketType == nil {
+				return nil, apperror.NewNotFound("ticket type")
+			}
+
 			info.PricePerUnit = ticketType.Price
 
 			currentSum := ticketType.Price * float64(info.Quantity)

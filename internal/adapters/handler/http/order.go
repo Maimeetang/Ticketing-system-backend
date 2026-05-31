@@ -33,7 +33,7 @@ type CreateTicketRequest struct {
 }
 
 type CreateTicketInfoRequest struct {
-	TicketTypeID uint `json:"ticket_type_id" validate:"required,gt=0"`
+	TicketTypeID uint `json:"ticket_type_id" validate:"gt=0"`
 	Quantity     int  `json:"quantity" validate:"gt=0"`
 }
 
@@ -65,6 +65,10 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 
 	shift, err := h.shiftService.GetUserActiveShift(userID)
 	if err != nil {
+		return err
+	}
+
+	if shift == nil {
 		return apperror.NewForbidden("you must clock-in first.")
 	}
 
