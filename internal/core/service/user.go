@@ -23,7 +23,7 @@ func (s *userServiceImpl) usernameValidation(id uint, username string) error {
 	}
 
 	if existingUser != nil && existingUser.ID != id {
-		return apperror.NewConflict("username already exists")
+		return apperror.NewConflict("username นี้ถูกใช้งานแล้ว")
 	}
 
 	return nil
@@ -37,7 +37,7 @@ func (s *userServiceImpl) Register(user *domain.User) error {
 
 	hashedPassword, err := util.HashPassword(user.Password)
 	if err != nil {
-		return apperror.NewInternalServerError("failed to process security constraints: " + err.Error())
+		return apperror.NewInternalServerError("ไม่สามารถเข้ารหัสรหัสผ่านได้: " + err.Error())
 	}
 
 	user.Password = string(hashedPassword)
@@ -50,13 +50,6 @@ func (s *userServiceImpl) UpdateUser(user *domain.User) error {
 	if err != nil{
 		return err
 	}
-
-	hashedPassword, err := util.HashPassword(user.Password)
-	if err != nil {
-		return apperror.NewInternalServerError("failed to process security constraints: " + err.Error())
-	}
-
-	user.Password = string(hashedPassword)
 
 	return s.repo.UpdateUser(user)
 }

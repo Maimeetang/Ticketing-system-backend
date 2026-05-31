@@ -12,25 +12,25 @@ func AuthRequired(cfg *config.AuthConfig) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		tokenString := c.Cookies("access_token")
 		if tokenString == "" {
-			return apperror.NewUnauthorized("unauthorized: missing access token")
+			return apperror.NewUnauthorized("ไม่ได้รับอนุญาต: ไม่พบ access token")
 		}
 
 		// Parse token and verify cryptographic signature against configured secret
-		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, apperror.NewUnauthorized("invalid signing method")
+				return nil, apperror.NewUnauthorized("วิธีการเข้ารหัสของ token ไม่ถูกต้อง")
 			}
 			return []byte(cfg.JWTSecret), nil
 		})
 
 		if err != nil || !token.Valid {
-			return apperror.NewUnauthorized("unauthorized: invalid or expired token")
+			return apperror.NewUnauthorized("ไม่ได้รับอนุญาต: token ไม่ถูกต้องหรือหมดอายุแล้ว")
 		}
 
 		// Extract verified metadata/claims payload
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			return apperror.NewUnauthorized("unauthorized: invalid payload structure")
+			return apperror.NewUnauthorized("ไม่ได้รับอนุญาต: โครงสร้างข้อมูลใน token ไม่ถูกต้อง")
 		}
 
 		c.Locals("user_id", claims["user_id"])

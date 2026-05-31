@@ -2,6 +2,7 @@ package http
 
 import (
 	"strconv"
+	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
 
@@ -29,7 +30,7 @@ func (h *TicketTypeHandler) CreatedType(c *fiber.Ctx) error {
 	var req TypeReq
 
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid ticket type request body"})
+		return apperror.NewBadRequest("รูปแบบข้อมูลประเภทตั๋วไม่ถูกต้อง")
 	}
 
 	if err := ValidateStruct(&req); err != nil {
@@ -50,7 +51,7 @@ func (h *TicketTypeHandler) CreatedType(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "ticket type created successfully.",
+		"message": "สร้างประเภทตั๋วสำเร็จ",
 		"data":    createdType,
 	})
 }
@@ -60,13 +61,13 @@ func (h *TicketTypeHandler) UpdateType(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	id, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid ticket type ID"})
+		return apperror.NewBadRequest("id ประเภทตั๋วไม่ถูกต้อง")
 	}
 
 	var req TypeReq
 
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid ticket type request body"})
+		return apperror.NewBadRequest("รูปแบบข้อมูลประเภทตั๋วไม่ถูกต้อง")
 	}
 
 	if err := ValidateStruct(&req); err != nil {
@@ -88,7 +89,7 @@ func (h *TicketTypeHandler) UpdateType(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "ticket type updated successfully.",
+		"message": "อัปเดตประเภทตั๋วสำเร็จ",
 		"data":    updatedType,
 	})
 }
@@ -98,7 +99,7 @@ func (h *TicketTypeHandler) GetTicketType(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	id, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid ticket type ID"})
+		return apperror.NewBadRequest("id ประเภทตั๋วไม่ถูกต้อง")
 	}
 
 	ticketType, err := h.service.GetTicketType(uint(id))
@@ -108,12 +109,10 @@ func (h *TicketTypeHandler) GetTicketType(c *fiber.Ctx) error {
 	}
 
 	if ticketType == nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "ticket type not found"})
+		return apperror.NewNotFound("ไม่พบประเภทตั๋ว")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data": ticketType,
-	})
+	return c.Status(fiber.StatusOK).JSON(ticketType)
 }
 
 // GET /tickets/types
@@ -124,7 +123,5 @@ func (h *TicketTypeHandler) ListTicketType(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data": types,
-	})
+	return c.Status(fiber.StatusOK).JSON(types)
 }

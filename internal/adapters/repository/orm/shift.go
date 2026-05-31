@@ -36,11 +36,10 @@ func (r *GormShiftRepository) UpdateShift(shift *domain.Shift) error {
 func (r *GormShiftRepository) GetActiveByUserID(userID uint) (*domain.Shift, error) {
 	var shift domain.Shift
 	
-	// Query database to find a shift that belongs to the user and is still 'OPEN'
 	err := r.db.Where("user_id = ? AND status = ?", userID, domain.ShiftOpen).First(&shift).Error
 	if err != nil {
 		return nil, handleError(err)
 	}
-	
+
 	return &shift, nil
 }

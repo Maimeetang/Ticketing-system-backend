@@ -41,21 +41,21 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 	// id from cookie
 	userIDCookie := c.Locals("user_id")
 	if userIDCookie == nil {
-		return apperror.NewUnauthorized("unauthorized: identity context missing")
+		return apperror.NewUnauthorized("ไม่ได้รับอนุญาต: ไม่พบข้อมูลผู้ใช้งาน")
 	}
 	userID, ok := userIDCookie.(uint)
 	if !ok {
 		if userIDFloat, ok := userIDCookie.(float64); ok {
 			userID = uint(userIDFloat)
 		} else {
-			return apperror.NewInternalServerError("failed to resolve user identity type")
+			return apperror.NewInternalServerError("ไม่สามารถแปลงประเภทข้อมูลผู้ใช้งานได้")
 		}
 	}
 
 	// logic
 	var req CreateOrderRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid order request body"})
+		return apperror.NewBadRequest("รูปแบบข้อมูลคำสั่งซื้อไม่ถูกต้อง")
 	}
 
 	if err := ValidateStruct(&req); err != nil {
@@ -83,9 +83,11 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 		return err
 	}
 
+	res := newOrderResponse(createdOrder)
+
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "order created successfully",
-		"data":    createdOrder,
+		"message": "สร้างรายการขายสำเร็จ",
+		"data":    res,
 	})
 }
 
@@ -96,7 +98,7 @@ func (h *OrderHandler) GetOrderByID(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	id, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
-		return apperror.NewBadRequest("invalid order id format")
+		return apperror.NewBadRequest("รูปแบบรหัสคำสั่งซื้อไม่ถูกต้อง")
 	}
 
 	order, err := h.service.GetOrderByID(uint(id))
@@ -104,13 +106,14 @@ func (h *OrderHandler) GetOrderByID(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+
 	if order == nil {
-		return apperror.NewNotFound("order not found.")
+		return apperror.NewNotFound("ไม่พบคำสั่งซื้อ")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data": order,
-	})
+	res := newOrderResponse(order)
+
+	return c.Status(fiber.StatusOK).JSON(res)
 }
 
 // GET /Orders
@@ -146,7 +149,7 @@ func (h *OrderHandler) setListOrdersDefaults(f *ListOrdersRequest) {
 func (h *OrderHandler) ListOrders(c *fiber.Ctx) error {
 	var req ListOrdersRequest
 	if err := c.QueryParser(&req); err != nil {
-		return apperror.NewBadRequest("invalid query parameter format")
+		return apperror.NewBadRequest("รูปแบบ query parameter ไม่ถูกต้อง")
 	}
 
 	h.setListOrdersDefaults(&req)
@@ -176,14 +179,14 @@ func (h *OrderHandler) ListOrders(c *fiber.Ctx) error {
 	if req.From != "" {
 		parsedFrom, err := time.Parse("2006-01-02", req.From)
 		if err != nil {
-			return apperror.NewBadRequest("invalid 'from' date format: must be YYYY-MM-DD")
+			return apperror.NewBadRequest("รูปแบบวันที่ไม่ถูกต้อง (ต้องเป็น YYYY-MM-DD)")
 		}
 		filter.From = &parsedFrom
 	}
 	if req.To != "" {
 		parsedTo, err := time.Parse("2006-01-02 15:04:05", req.To+" 23:59:59")
 		if err != nil {
-			return apperror.NewBadRequest("invalid 'to' date format: must be YYYY-MM-DD")
+			return apperror.NewBadRequest("รูปแบบวันที่ไม่ถูกต้อง (ต้องเป็น YYYY-MM-DD)")
 		}
 		filter.To = &parsedTo
 	}
@@ -202,8 +205,9 @@ func (h *OrderHandler) ListOrders(c *fiber.Ctx) error {
 		Page:    filter.Page,
 		PerPage: filter.Limit,
 	}
-	response := NewPaginationResponse(records, totalCount, param, "/api/orders")
-	return c.Status(fiber.StatusOK).JSON(response)
+	res := NewPaginationResponse(records, totalCount, param, "/orders")
+
+	return c.Status(fiber.StatusOK).JSON(res)
 }
 
 // PUT

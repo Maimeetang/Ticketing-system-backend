@@ -17,19 +17,27 @@ func NewShiftHandler(shiftService port.ShiftService) *ShiftHandler {
 	return &ShiftHandler{shiftService: shiftService}
 }
 
-func (h *ShiftHandler) ClockIn(c *fiber.Ctx) error {
+func getUserID(c *fiber.Ctx) (uint, error) {
 	userIDLocal := c.Locals("user_id")
 	if userIDLocal == nil {
-		return apperror.NewUnauthorized("unauthorized: identity context missing")
+		return 0, apperror.NewUnauthorized("ไม่ได้รับอนุญาต: ไม่พบข้อมูลผู้ใช้งาน")
 	}
 
-	userID, ok := userIDLocal.(uint)
-	if !ok {
-		if userIDFloat, ok := userIDLocal.(float64); ok {
-			userID = uint(userIDFloat)
-		} else {
-			return apperror.NewInternalServerError("failed to resolve user identity type")
-		}
+	if userID, ok := userIDLocal.(uint); ok {
+		return userID, nil
+	}
+
+	if userIDFloat, ok := userIDLocal.(float64); ok {
+		return uint(userIDFloat), nil
+	}
+
+	return 0, apperror.NewInternalServerError("ไม่สามารถแปลงประเภทข้อมูลผู้ใช้งานได้")
+}
+
+func (h *ShiftHandler) ClockIn(c *fiber.Ctx) error {
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
 	}
 
 	shift := domain.Shift{
@@ -39,7 +47,7 @@ func (h *ShiftHandler) ClockIn(c *fiber.Ctx) error {
 		Status:    domain.ShiftOpen,
 	}
 
-	_, err := h.shiftService.ClockIn(&shift)
+	_, err = h.shiftService.ClockIn(&shift)
 	if err != nil {
 		return err
 	}
@@ -47,49 +55,31 @@ func (h *ShiftHandler) ClockIn(c *fiber.Ctx) error {
 	res := newShiftResponse(&shift)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "shift session opened successfully.",
+		"message": "เริ่มกะการทำงานสำเร็จ",
 		"data":    res,
 	})
 }
 
 func (h *ShiftHandler) ClockOut(c *fiber.Ctx) error {
-	userIDLocal := c.Locals("user_id")
-	if userIDLocal == nil {
-		return apperror.NewUnauthorized("unauthorized: identity context missing")
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
 	}
 
-	userID, ok := userIDLocal.(uint)
-	if !ok {
-		if userIDFloat, ok := userIDLocal.(float64); ok {
-			userID = uint(userIDFloat)
-		} else {
-			return apperror.NewInternalServerError("failed to resolve user identity type")
-		}
-	}
-
-	err := h.shiftService.ClockOut(userID)
+	err = h.shiftService.ClockOut(userID)
 	if err != nil {
 		return err
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "shift session closed successfully.",
+		"message": "สิ้นสุดกะการทำงานสำเร็จ",
 	})
 }
 
 func (h *ShiftHandler) GetActiveShift(c *fiber.Ctx) error {
-	userIDLocal := c.Locals("user_id")
-	if userIDLocal == nil {
-		return apperror.NewUnauthorized("unauthorized: identity context missing")
-	}
-
-	userID, ok := userIDLocal.(uint)
-	if !ok {
-		if userIDFloat, ok := userIDLocal.(float64); ok {
-			userID = uint(userIDFloat)
-		} else {
-			return apperror.NewInternalServerError("failed to resolve user identity type")
-		}
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
 	}
 
 	shift, err := h.shiftService.GetUserActiveShift(userID)
@@ -98,7 +88,7 @@ func (h *ShiftHandler) GetActiveShift(c *fiber.Ctx) error {
 	}
 
 	if shift == nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "shift not found"})
+		return apperror.NewNotFound("ไม่พบกะการทำงานที่กำลังเปิดอยู่")
 	}
 
 	res := newShiftResponse(shift)

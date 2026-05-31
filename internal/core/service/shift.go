@@ -18,8 +18,12 @@ func NewShiftService(repo port.ShiftRepository) port.ShiftService {
 // Business Core logic
 func (s *shiftServiceImpl) ClockIn(shift *domain.Shift) (*domain.Shift, error) {
 	activeShift, err := s.repo.GetActiveByUserID(shift.UserID)
-	if err == nil && activeShift != nil {
-		return nil, apperror.NewConflict("user already has an active working shift session open")
+	if err != nil {
+		return nil, err
+	}
+
+	if activeShift != nil {
+		return nil, apperror.NewConflict("คุณมีกะการทำงานที่เปิดอยู่แล้ว")
 	}
 
 	if err := s.repo.CreateShift(shift); err != nil {
@@ -31,8 +35,13 @@ func (s *shiftServiceImpl) ClockIn(shift *domain.Shift) (*domain.Shift, error) {
 
 func (s *shiftServiceImpl) ClockOut(userID uint) error {
 	shift, err := s.repo.GetActiveByUserID(userID)
+
 	if err != nil {
-		return apperror.NewNotFound("no active shift session found for this user to clock out")
+		return err
+	}
+
+	if shift == nil {
+		return apperror.NewNotFound("ไม่พบกะการทำงานที่กำลังเปิดอยู่")
 	}
 
 	now := time.Now()
@@ -44,8 +53,10 @@ func (s *shiftServiceImpl) ClockOut(userID uint) error {
 
 func (s *shiftServiceImpl) GetUserActiveShift(userID uint) (*domain.Shift, error) {
 	shift, err := s.repo.GetActiveByUserID(userID)
+
 	if err != nil {
-		return nil, apperror.NewNotFound("no active shift running for this user")
+		return nil, err
 	}
+
 	return shift, nil
 }

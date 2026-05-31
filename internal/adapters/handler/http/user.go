@@ -2,6 +2,7 @@ package http
 
 import (
 	"strconv"
+	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
 
@@ -41,7 +42,7 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	var req CreateUserRequest
 
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request"})
+		return apperror.NewBadRequest("รูปแบบข้อมูลผู้ใช้งานไม่ถูกต้อง")
 	}
 	
 	if err := ValidateStruct(&req); err != nil {
@@ -64,7 +65,7 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "user has been added.",
+		"message": "เพิ่มผู้ใช้งานสำเร็จ",
 	})
 }
 
@@ -73,12 +74,12 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	userID, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid user ID"})
+		return apperror.NewBadRequest("id ผู้ใช้งานไม่ถูกต้อง")
 	}
 
 	var req UpdateUserRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request"})
+		return apperror.NewBadRequest("รูปแบบข้อมูลผู้ใช้งานไม่ถูกต้อง")
 	}
 
 	if err := ValidateStruct(&req); err != nil {
@@ -100,7 +101,7 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	}
 	
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "user has been update.",
+		"message": "อัปเดตผู้ใช้งานสำเร็จ",
 	})
 }
 
@@ -108,7 +109,7 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid user ID"})
+		return apperror.NewBadRequest("id ผู้ใช้งานไม่ถูกต้อง")
 	}
 
 	if err := h.service.DeleteUser(uint(id)); err != nil {
@@ -120,7 +121,7 @@ func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid user ID"})
+		return apperror.NewBadRequest("id ผู้ใช้งานไม่ถูกต้อง")
 	}
 
 	user, err := h.service.GetUser(uint(id))
@@ -129,7 +130,7 @@ func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 	}
 
 	if user == nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "user not found"})
+		return apperror.NewNotFound("ไม่พบผู้ใช้งาน")
 	}
 
 	res := newUserResponse(user)

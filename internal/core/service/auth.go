@@ -25,14 +25,14 @@ func NewAuthService(userRepo port.UserRepository, cfg *config.AuthConfig) port.A
 func (s *authServiceImpl) Login(username, password string) (string, error) {
 	// Get user from repository
 	user, err := s.userRepo.GetUserByUsername(username)
-	if err != nil {
-		return "", apperror.NewUnauthorized("The username or password is incorrect.")
+	if err != nil || user == nil  {
+		return "", apperror.NewUnauthorized("username หรือ password ไม่ถูกต้อง")
 	}
 
 	// Check password
 	err = util.ComparePassword(password, user.Password)
 	if err != nil {
-		return "", apperror.NewUnauthorized("The username or password is incorrect.")
+		return "", apperror.NewUnauthorized("username หรือ password ไม่ถูกต้อง")
 	}
 
 	// Create JWT Token
@@ -46,7 +46,7 @@ func (s *authServiceImpl) Login(username, password string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(s.cfg.JWTSecret))
 	if err != nil {
-		return "", apperror.NewInternalServerError("Unable to generate a token.")
+		return "", apperror.NewInternalServerError("ไม่สามารถสร้างโทเค็นได้")
 	}
 
 	return tokenString, nil

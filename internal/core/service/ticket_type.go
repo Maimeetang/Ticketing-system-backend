@@ -25,7 +25,7 @@ func (s *ticketTypeServiceImpl) validateAndNormalizeName(ticketType *domain.Tick
 	}
 
 	if existing != nil && existing.ID != ticketType.ID {
-		return apperror.NewConflict("ticket type name already exists")
+		return apperror.NewConflict("มีประเภทตั๋วนี้อยู่แล้ว")
 	}
 
 	return nil

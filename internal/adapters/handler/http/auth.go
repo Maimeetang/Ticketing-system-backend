@@ -49,7 +49,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	})
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"Message":  "Login success",
+		"message":  "Login สำเร็จ",
 	})
 }
 
@@ -65,6 +65,6 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 	})
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Logout Success",
+		"message": "Logout สำเร็จ",
 	})
 }

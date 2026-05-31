@@ -17,24 +17,32 @@ func ValidateStruct(s any) error {
 	}
 
 	if validationErrors, ok := err.(validator.ValidationErrors); ok {
+		var messages []string
+
 		for _, fieldErr := range validationErrors {
 			fieldName := strings.ToLower(fieldErr.Field())
 
 			switch fieldErr.Tag() {
 			case "required":
-				return apperror.NewBadRequest(fmt.Sprintf("field '%s' is required", fieldName))
+				messages = append(messages, fmt.Sprintf("ต้องระบุ '%s'", fieldName))
+
 			case "min":
-				return apperror.NewBadRequest(fmt.Sprintf("field '%s' must be at least %s characters long", fieldName, fieldErr.Param()))
+				messages = append(messages, fmt.Sprintf("'%s' ต้องมีความยาวอย่างน้อย %s ตัวอักษร", fieldName, fieldErr.Param()))
+
 			case "oneof":
 				if fieldErr.Field() == "Role" {
-					return apperror.NewBadRequest("invalid user role: must be either 'CASHIER' or 'SCANNER'")
+					messages = append(messages, "บทบาทผู้ใช้งานไม่ถูกต้อง (ต้องเป็น CASHIER หรือ SCANNER)")
+				} else {
+					messages = append(messages, fmt.Sprintf("'%s' ต้องเป็นค่าใดค่าหนึ่งใน [%s]", fieldName, fieldErr.Param()))
 				}
-				return apperror.NewBadRequest(fmt.Sprintf("field '%s' must be one of: %s", fieldName, fieldErr.Param()))
+
 			case "gt":
-				return apperror.NewBadRequest(fmt.Sprintf("field '%s' must be greater than %s", fieldName, fieldErr.Param()))
+				messages = append(messages, fmt.Sprintf("'%s' ต้องมีค่ามากกว่า %s", fieldName, fieldErr.Param()))
 			}
 		}
+
+		return apperror.NewBadRequest(strings.Join(messages, ", "))
 	}
 
-	return apperror.NewBadRequest("request validation failed")
+	return apperror.NewBadRequest("ข้อมูลไม่ถูกต้อง")
 }

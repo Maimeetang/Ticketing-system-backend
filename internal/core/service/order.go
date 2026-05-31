@@ -50,7 +50,7 @@ func (s *orderServiceImpl) CreateOrder(order *domain.Order) (*domain.Order, erro
 			}
 
 			if ticketType == nil {
-				return nil, apperror.NewNotFound("ticket type")
+				return nil, apperror.NewNotFound("ไม่พบประเภทตั๋ว")
 			}
 
 			info.PricePerUnit = ticketType.Price
@@ -65,7 +65,7 @@ func (s *orderServiceImpl) CreateOrder(order *domain.Order) (*domain.Order, erro
 			FromStatus:  nil,
 			ToStatus:    domain.TicketActive,
 			TriggeredBy: order.CashierID,
-			Remarks:     "Ticket has benn created",
+			Remarks:     "สร้างตั๋วสำเร็จ",
 		})
 	}
 	order.TotalPrice = orderTotalPrice
@@ -94,12 +94,14 @@ func (s *orderServiceImpl) CancelOrder(id uint, userID uint) error {
 		return err
 	}
 	if order == nil {
-		return apperror.NewNotFound("order not found.")
+		return apperror.NewNotFound("ไม่พบรายการขาย")
 	}
 
 	for _, ticket := range order.Tickets {
 		if ticket.Status == domain.TicketUsed {
-			return apperror.NewConflict(fmt.Sprintf("cannot cancel order: ticket %s has already been used", ticket.TicketCode))
+			return apperror.NewConflict(
+				fmt.Sprintf("ไม่สามารถยกเลิกรายการได้: ตั๋ว %s ถูกใช้งานแล้ว", ticket.TicketCode),
+			)
 		}
 	}
 
@@ -113,7 +115,7 @@ func (s *orderServiceImpl) CancelOrder(id uint, userID uint) error {
 			FromStatus:  &oldStatus,
 			ToStatus:    ticket.Status,
 			TriggeredBy: userID,
-			Remarks:     "Ticket has been cancelled",
+			Remarks: "ยกเลิกตั๋วแล้ว",
 		})
 	}
 
