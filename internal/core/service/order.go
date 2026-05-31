@@ -9,15 +9,28 @@ import (
 )
 
 type orderServiceImpl struct {
+	shiftRepo port.ShiftRepository
 	orderRepo port.OrderRepository
 	ticketTypeRepo port.TicketTypeRepository
 }
 
-func NewOrderService(orderRepo port.OrderRepository, ticketTypeRepo port.TicketTypeRepository) port.OrderService {
-	return &orderServiceImpl{orderRepo, ticketTypeRepo}
+func NewOrderService(shiftRepo port.ShiftRepository, orderRepo port.OrderRepository, ticketTypeRepo port.TicketTypeRepository) port.OrderService {
+	return &orderServiceImpl{shiftRepo, orderRepo, ticketTypeRepo}
 }
 
 func (s *orderServiceImpl) CreateOrder(order *domain.Order) (*domain.Order, error) {
+	shift, err := s.shiftRepo.GetActiveByUserID(order.CashierID)
+	
+	if err != nil {
+		return nil, err
+	}
+
+	if shift == nil {
+		return nil, apperror.NewForbidden("กรุณาเริ่มกะการทำงานก่อนทำรายการขาย")
+	}
+
+	order.ShiftID = shift.ID
+
 	var orderTotalPrice float64
 
 	for i := range order.Tickets {

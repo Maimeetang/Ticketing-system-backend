@@ -60,8 +60,8 @@ func New() *FiberServer {
 	ticketTypeHandler := http.NewTicketTypeHandler(ticketTypeService)
 
 	orderRepo := orm.NewGormOrderRepository(db)
-	orderService := service.NewOrderService(orderRepo, ticketTypeRepo)
-	orderHandler := http.NewOrderHandler(orderService, shiftService)
+	orderService := service.NewOrderService(shiftRepo, orderRepo, ticketTypeRepo)
+	orderHandler := http.NewOrderHandler(orderService)
 
 	// Build Fiber application engine with centralized error interceptor
 	app := fiber.New(fiber.Config{

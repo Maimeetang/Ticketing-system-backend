@@ -12,12 +12,11 @@ import (
 )
 
 type OrderHandler struct {
-	orderService port.OrderService
-	shiftService port.ShiftService
+	service port.OrderService
 }
 
-func NewOrderHandler(orderService port.OrderService, shiftService port.ShiftService) *OrderHandler {
-	return &OrderHandler{orderService, shiftService}
+func NewOrderHandler(service port.OrderService) *OrderHandler {
+	return &OrderHandler{service: service}
 }
 
 // POST /Orders/:id
@@ -63,18 +62,8 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 		return err
 	}
 
-	shift, err := h.shiftService.GetUserActiveShift(userID)
-	if err != nil {
-		return err
-	}
-
-	if shift == nil {
-		return apperror.NewForbidden("you must clock-in first.")
-	}
-
 	order := &domain.Order{
 		CashierID:     userID,
-		ShiftID:       shift.ID,
 		PaymentMethod: req.PaymentMethod,
 	}
 
@@ -89,7 +78,7 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 		order.Tickets = append(order.Tickets, ticket)
 	}
 
-	createdOrder, err := h.orderService.CreateOrder(order)
+	createdOrder, err := h.service.CreateOrder(order)
 	if err != nil {
 		return err
 	}
@@ -110,7 +99,8 @@ func (h *OrderHandler) GetOrderByID(c *fiber.Ctx) error {
 		return apperror.NewBadRequest("invalid order id format")
 	}
 
-	order, err := h.orderService.GetOrderByID(uint(id))
+	order, err := h.service.GetOrderByID(uint(id))
+
 	if err != nil {
 		return err
 	}
@@ -198,7 +188,7 @@ func (h *OrderHandler) ListOrders(c *fiber.Ctx) error {
 		filter.To = &parsedTo
 	}
 
-	orders, totalCount, err := h.orderService.ListOrders(filter)
+	orders, totalCount, err := h.service.ListOrders(filter)
 	if err != nil {
 		return err
 	}
