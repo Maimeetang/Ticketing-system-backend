@@ -33,8 +33,8 @@ const (
 type OrderStatus string
 
 const (
-	OrderStatusPaid      OrderStatus   = "PAID"
-	OrderStatusCancelled PaymentMethod = "CANCELLED"
+	OrderStatusPaid      OrderStatus = "PAID"
+	OrderStatusCancelled OrderStatus = "CANCELLED"
 )
 
 type TicketStatus string

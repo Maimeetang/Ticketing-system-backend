@@ -104,7 +104,7 @@ func (s *orderServiceImpl) CancelOrder(id uint, userID uint) error {
 		})
 	}
 
-	order.Status = domain.OrderStatus(domain.OrderStatusCancelled)
+	order.Status = domain.OrderStatusCancelled
 	
 	_, err = s.orderRepo.UpdateOrder(order)
 	return err
