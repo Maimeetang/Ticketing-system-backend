@@ -1,8 +1,6 @@
 package orm
 
 import (
-	"errors"
-	"strings"
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
@@ -20,14 +18,13 @@ func NewGormShiftRepository(db *gorm.DB) port.ShiftRepository {
 
 func (r *GormShiftRepository) CreateShift(shift *domain.Shift) error {
 	err := r.db.Create(shift).Error
-	return handleShiftError(err)
+	return handleError(err)
 }
 
 func (r *GormShiftRepository) UpdateShift(shift *domain.Shift) error {
-	// Updates using struct attributes matching primaryKey criteria
 	result := r.db.Model(&domain.Shift{}).Where("id = ?", shift.ID).Updates(shift)
 	if result.Error != nil {
-		return handleShiftError(result.Error)
+		return handleError(result.Error)
 	}
 	
 	if result.RowsAffected == 0 {
@@ -42,31 +39,8 @@ func (r *GormShiftRepository) GetActiveByUserID(userID uint) (*domain.Shift, err
 	// Query database to find a shift that belongs to the user and is still 'OPEN'
 	err := r.db.Where("user_id = ? AND status = ?", userID, domain.ShiftOpen).First(&shift).Error
 	if err != nil {
-		return nil, handleShiftError(err)
+		return nil, handleError(err)
 	}
 	
 	return &shift, nil
-}
-
-func handleShiftError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil
-	}
-
-	// Capture foreign key constraint validation failure (e.g., clocking in a non-existent user)
-	if isForeignKeyViolation(err) {
-		return apperror.NewBadRequest("associated user ID does not exist")
-	}
-
-	return apperror.NewInternalServerError("database processing fault: " + err.Error())
-}
-
-// Auxiliary helper to catch constraint validation across relational storage engines
-func isForeignKeyViolation(err error) bool {
-	errMsg := strings.ToLower(err.Error())
-	return strings.Contains(errMsg, "foreign key") || strings.Contains(errMsg, "constraint failed")
 }

@@ -1,9 +1,7 @@
 package orm
 
 import (
-	"errors"
 	"strings"
-	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
 
@@ -21,7 +19,7 @@ func NewGormOrderRepository(db *gorm.DB) port.OrderRepository {
 func (r *GormOrderRepository) CreateOrder(order *domain.Order) (*domain.Order, error) {
 	err := r.db.Create(order).Error
 	if err != nil {
-		return nil, handleOrderError(err)
+		return nil, handleError(err)
 	}
 	return order, nil
 }
@@ -33,7 +31,7 @@ func (r *GormOrderRepository) GetOrderByID(id uint) (*domain.Order, error) {
 				Preload("Tickets.TicketLogs").
 				First(&order, id).Error
 	if err != nil {
-		return nil, handleOrderError(err)
+		return nil, handleError(err)
 	}
 	return &order, nil
 }
@@ -63,7 +61,7 @@ func (r *GormOrderRepository) ListOrders(filter domain.OrderFilter) ([]domain.Or
 	}
 
 	if err := query.Count(&totalCount).Error; err != nil {
-		return nil, 0, err
+		return nil, 0, handleError(err)
 	}
 
 	// sort
@@ -78,7 +76,7 @@ func (r *GormOrderRepository) ListOrders(filter domain.OrderFilter) ([]domain.Or
 		Limit(filter.Limit).Offset(offset).Find(&orders).Error
 
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, handleError(err)
 	}
 
 	return orders, totalCount, nil
@@ -87,17 +85,7 @@ func (r *GormOrderRepository) ListOrders(filter domain.OrderFilter) ([]domain.Or
 func (r *GormOrderRepository) UpdateOrder(order *domain.Order) (*domain.Order, error) {
 	err := r.db.Save(order).Error
 	if err != nil {
-		return nil, handleOrderError(err)
+		return nil, handleError(err)
 	}
 	return order, nil
-}
-
-func handleOrderError(err error) error {
-	if err == nil {
-		return nil
-	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil
-	}
-	return apperror.NewInternalServerError("database error: " + err.Error())
 }
