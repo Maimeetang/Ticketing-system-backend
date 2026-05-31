@@ -56,6 +56,8 @@ func New() *FiberServer {
 	shiftHandler := http.NewShiftHandler(shiftService)
 
 	ticketTypeRepo := orm.NewGormTicketTypeRepository(db)
+	ticketTypeService := service.NewTicketTypeService(ticketTypeRepo)
+	ticketTypeHandler := http.NewTicketTypeHandler(ticketTypeService)
 
 	orderRepo := orm.NewGormOrderRepository(db)
 	orderService := service.NewOrderService(orderRepo, ticketTypeRepo)
@@ -88,7 +90,7 @@ func New() *FiberServer {
 		Cfg: cfg,
 	}
 
-	server.RegisterRoutes(userHandler, authHandler, shiftHandler, orderHandler)
+	server.RegisterRoutes(userHandler, authHandler, shiftHandler, orderHandler, ticketTypeHandler)
 
 	return server
 }

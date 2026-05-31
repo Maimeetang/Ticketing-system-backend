@@ -10,6 +10,7 @@ func (s *FiberServer) RegisterRoutes(
 	authHandler *http.AuthHandler,
 	shiftHandler *http.ShiftHandler,
 	orderHandler *http.OrderHandler,
+	ticketTypeHandler *http.TicketTypeHandler,
 ) {
 	// Root API Group
 	// ----------------------------------------------------
@@ -46,4 +47,13 @@ func (s *FiberServer) RegisterRoutes(
 	orderRoutes.Post("/", orderHandler.CreateOrder)
 	orderRoutes.Get("/:id", orderHandler.GetOrderByID)
 	orderRoutes.Get("/", orderHandler.ListOrders)
+
+	// ----------------------------------------------------
+	// Protected Ticket Type
+	// ----------------------------------------------------
+	typeRoutes := s.App.Group("/tickets/types")
+	typeRoutes.Post("/", ticketTypeHandler.CreatedType)
+	typeRoutes.Put("/:id", ticketTypeHandler.UpdateType)
+	typeRoutes.Get("/:id", ticketTypeHandler.GetTicketType)
+	typeRoutes.Get("/", ticketTypeHandler.ListTicketType)
 }

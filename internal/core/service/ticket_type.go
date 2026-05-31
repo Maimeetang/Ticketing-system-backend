@@ -47,21 +47,10 @@ func (s *ticketTypeServiceImpl) UpdateTicketType(ticketType *domain.TicketType) 
 	return s.repo.UpdateTicketType(ticketType)
 }
 
-func (s *ticketTypeServiceImpl) DisableTicketType(id uint) error {
-	ticketType, err := s.repo.GetByID(id)
-	if err != nil {
-		return err
-	}
-
-	if !ticketType.IsActive {
-		return nil
-	}
-
-	ticketType.IsActive = false
-	_, err = s.repo.UpdateTicketType(ticketType)
-	return err
-}
-
 func (s *ticketTypeServiceImpl) GetTicketType(id uint) (*domain.TicketType, error) {
 	return s.repo.GetByID(id)
+}
+
+func (s *ticketTypeServiceImpl) ListTicketType() ([]domain.TicketType, error) {
+	return s.repo.ListTicketType()
 }
