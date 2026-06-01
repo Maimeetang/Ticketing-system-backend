@@ -33,7 +33,7 @@ func (h *TicketTypeHandler) CreatedType(c *fiber.Ctx) error {
 		return apperror.NewBadRequest("รูปแบบข้อมูลประเภทตั๋วไม่ถูกต้อง")
 	}
 
-	if err := ValidateStruct(&req); err != nil {
+	if err := validateStruct(&req); err != nil {
 		return err
 	}
 
@@ -70,7 +70,7 @@ func (h *TicketTypeHandler) UpdateType(c *fiber.Ctx) error {
 		return apperror.NewBadRequest("รูปแบบข้อมูลประเภทตั๋วไม่ถูกต้อง")
 	}
 
-	if err := ValidateStruct(&req); err != nil {
+	if err := validateStruct(&req); err != nil {
 		return err
 	}
 

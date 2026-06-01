@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
@@ -31,45 +30,41 @@ func (s *orderServiceImpl) CreateOrder(order *domain.Order) (*domain.Order, erro
 
 	order.ShiftID = shift.ID
 
-	var orderTotalPrice float64
+	ticket := &order.Ticket
 
-	for i := range order.Tickets {
-		ticket := &order.Tickets[i]
+	ticket.TicketCode = util.GenerateTicketCode(order.CashierID)
+	ticket.Status = domain.TicketActive
 
-		ticket.TicketCode = util.GenerateTicketCode(order.CashierID)
-		ticket.Status = domain.TicketActive
-		
-		var ticketTotalPrice float64
+	var total float64
 
-		for j := range ticket.TicketInfos {
-			info := &ticket.TicketInfos[j]
+	for i := range ticket.TicketInfos {
+		info := &ticket.TicketInfos[i]
 
-			ticketType, err := s.ticketTypeRepo.GetByID(info.TicketTypeID)
-			if err != nil {
-				return nil, err
-			}
-
-			if ticketType == nil {
-				return nil, apperror.NewNotFound("ไม่พบประเภทตั๋ว")
-			}
-
-			info.PricePerUnit = ticketType.Price
-
-			currentSum := ticketType.Price * float64(info.Quantity)
-			ticketTotalPrice += currentSum
-			orderTotalPrice += currentSum
+		ticketType, err := s.ticketTypeRepo.GetByID(info.TicketTypeID)
+		if err != nil {
+			return nil, err
 		}
-		ticket.TotalPrice = ticketTotalPrice
 
-		ticket.TicketLogs = append(ticket.TicketLogs, domain.TicketLog{
-			FromStatus:  nil,
-			ToStatus:    domain.TicketActive,
-			TriggeredBy: order.CashierID,
-			Remarks:     "สร้างตั๋วสำเร็จ",
-		})
+		if ticketType == nil {
+			return nil, apperror.NewNotFound("ไม่พบประเภทตั๋ว")
+		}
+
+		info.PricePerUnit = ticketType.Price
+
+		currentSum := ticketType.Price * float64(info.Quantity)
+		total += currentSum
 	}
-	order.TotalPrice = orderTotalPrice
+
+	ticket.TotalPrice = total
+	order.TotalPrice = total
 	order.Status = domain.OrderStatusPaid
+
+	ticket.TicketLogs = append(ticket.TicketLogs, domain.TicketLog{
+		FromStatus:  nil,
+		ToStatus:    domain.TicketActive,
+		TriggeredBy: order.CashierID,
+		Remarks:     "สร้างตั๋วสำเร็จ",
+	})
 
 	return s.orderRepo.CreateOrder(order)
 }
@@ -88,39 +83,38 @@ func (s *orderServiceImpl) ListOrders(filter domain.OrderFilter) ([]domain.Order
 	return s.orderRepo.ListOrders(filter)
 }
 
-func (s *orderServiceImpl) CancelOrder(id uint, userID uint) error {
-	order, err := s.orderRepo.GetOrderByID(id)
+func (s *orderServiceImpl) CancelOrder(ticketCode string, userID uint) error {
+	order, err := s.orderRepo.GetByTicketCode(ticketCode)
 	if err != nil {
 		return err
 	}
+
 	if order == nil {
-		return apperror.NewNotFound("ไม่พบรายการขาย")
+		return apperror.NewNotFound("ไม่พบตั๋ว")
 	}
 
-	for _, ticket := range order.Tickets {
-		if ticket.Status == domain.TicketUsed {
-			return apperror.NewConflict(
-				fmt.Sprintf("ไม่สามารถยกเลิกรายการได้: ตั๋ว %s ถูกใช้งานแล้ว", ticket.TicketCode),
-			)
-		}
+	if order.Status == domain.OrderStatusCancelled {
+		return apperror.NewConflict("รายการนี้ถูกยกเลิกแล้ว")
 	}
 
-	for i := range order.Tickets {
-		ticket := &order.Tickets[i]
-		
-		oldStatus := ticket.Status 
-		ticket.Status = domain.TicketCancelled
-
-		ticket.TicketLogs = append(ticket.TicketLogs, domain.TicketLog{
-			FromStatus:  &oldStatus,
-			ToStatus:    ticket.Status,
-			TriggeredBy: userID,
-			Remarks: "ยกเลิกตั๋วแล้ว",
-		})
+	if order.Ticket.Status == domain.TicketUsed {
+		return apperror.NewConflict("ไม่สามารถยกเลิกได้: ตั๋วถูกใช้งานแล้ว")
 	}
+
+	oldStatus := order.Ticket.Status
 
 	order.Status = domain.OrderStatusCancelled
-	
+	order.TotalPrice = 0
+
+	order.Ticket.Status = domain.TicketCancelled
+
+	order.Ticket.TicketLogs = append(order.Ticket.TicketLogs, domain.TicketLog{
+		FromStatus:  &oldStatus,
+		ToStatus:    domain.TicketCancelled,
+		TriggeredBy: userID,
+		Remarks:     "ยกเลิกตั๋ว (พิมพ์ผิด)",
+	})
+
 	_, err = s.orderRepo.UpdateOrder(order)
 	return err
 }

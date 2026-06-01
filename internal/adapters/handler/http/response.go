@@ -66,20 +66,13 @@ type orderResponse struct {
 	TotalPrice    float64          `json:"total_price"`
 	PaymentMethod string           `json:"payment_method"`
 	Status        string           `json:"status"`
-	Tickets       []ticketResponse `json:"tickets"` 
+	Ticket        ticketResponse   `json:"ticket"` 
 	CreatedAt     time.Time        `json:"created_at"`
 	UpdatedAt     time.Time        `json:"updated_at"`
 }
 
 // newOrderResponse is a helper function to create a response body for handling order data
 func newOrderResponse(order *domain.Order) orderResponse {
-	tickets := make([]ticketResponse, 0)
-	if len(order.Tickets) > 0 {
-		for _, t := range order.Tickets {
-			tickets = append(tickets, newTicketResponse(&t))
-		}
-	}
-
 	return orderResponse{
 		ID:            order.ID,
 		CashierID:     order.CashierID,
@@ -87,7 +80,7 @@ func newOrderResponse(order *domain.Order) orderResponse {
 		TotalPrice:    order.TotalPrice,
 		PaymentMethod: string(order.PaymentMethod),
 		Status:        string(order.Status),
-		Tickets:       tickets,
+		Ticket:        newTicketResponse(&order.Ticket),
 		CreatedAt:     order.CreatedAt,
 		UpdatedAt:     order.UpdatedAt,
 	}

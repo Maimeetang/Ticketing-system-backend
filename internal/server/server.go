@@ -63,6 +63,10 @@ func New() *FiberServer {
 	orderService := service.NewOrderService(shiftRepo, orderRepo, ticketTypeRepo)
 	orderHandler := http.NewOrderHandler(orderService)
 
+	ticketRepo := orm.NewGormTicketRepository(db)
+	ticketService := service.NewTicketService(ticketRepo)
+	ticketHandler := http.NewTicketHandler(ticketService)
+
 	// Build Fiber application engine with centralized error interceptor
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -90,7 +94,7 @@ func New() *FiberServer {
 		Cfg: cfg,
 	}
 
-	server.RegisterRoutes(userHandler, authHandler, shiftHandler, orderHandler, ticketTypeHandler)
+	server.RegisterRoutes(userHandler, authHandler, shiftHandler, orderHandler, ticketTypeHandler, ticketHandler)
 
 	return server
 }

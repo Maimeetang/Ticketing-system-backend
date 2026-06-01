@@ -6,11 +6,29 @@ import (
 	"ticketing-system/internal/apperror"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2"
 )
 
-var validate = validator.New()
+func getUserID(c *fiber.Ctx) (uint, error) {
+	userIDLocal := c.Locals("user_id")
+	if userIDLocal == nil {
+		return 0, apperror.NewUnauthorized("ไม่ได้รับอนุญาต: ไม่พบข้อมูลผู้ใช้งาน")
+	}
 
-func ValidateStruct(s any) error {
+	if userID, ok := userIDLocal.(uint); ok {
+		return userID, nil
+	}
+
+	if userIDFloat, ok := userIDLocal.(float64); ok {
+		return uint(userIDFloat), nil
+	}
+
+	return 0, apperror.NewInternalServerError("ไม่สามารถแปลงประเภทข้อมูลผู้ใช้งานได้")
+}
+
+func validateStruct(s any) error {
+	var validate = validator.New()
+
 	err := validate.Struct(s)
 	if err == nil {
 		return nil

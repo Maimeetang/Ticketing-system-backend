@@ -17,23 +17,6 @@ func NewShiftHandler(shiftService port.ShiftService) *ShiftHandler {
 	return &ShiftHandler{shiftService: shiftService}
 }
 
-func getUserID(c *fiber.Ctx) (uint, error) {
-	userIDLocal := c.Locals("user_id")
-	if userIDLocal == nil {
-		return 0, apperror.NewUnauthorized("ไม่ได้รับอนุญาต: ไม่พบข้อมูลผู้ใช้งาน")
-	}
-
-	if userID, ok := userIDLocal.(uint); ok {
-		return userID, nil
-	}
-
-	if userIDFloat, ok := userIDLocal.(float64); ok {
-		return uint(userIDFloat), nil
-	}
-
-	return 0, apperror.NewInternalServerError("ไม่สามารถแปลงประเภทข้อมูลผู้ใช้งานได้")
-}
-
 func (h *ShiftHandler) ClockIn(c *fiber.Ctx) error {
 	userID, err := getUserID(c)
 	if err != nil {

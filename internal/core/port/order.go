@@ -10,13 +10,15 @@ type OrderService interface {
 	// ListOrders returns all orders.
 	ListOrders(filter domain.OrderFilter) ([]domain.Order, int64, error)
 	// CancelOrder cancels an order and its tickets.
-	CancelOrder(id uint, userID uint) error
+	CancelOrder(code string, userID uint) error
 }
 
 type OrderRepository interface {
 	CreateOrder(order *domain.Order) (*domain.Order, error)
 
 	GetOrderByID(id uint) (*domain.Order, error)
+
+	GetByTicketCode(code string) (*domain.Order, error)
 
 	ListOrders(filter domain.OrderFilter) ([]domain.Order, int64, error)
 

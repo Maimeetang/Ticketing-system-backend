@@ -45,7 +45,7 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		return apperror.NewBadRequest("รูปแบบข้อมูลผู้ใช้งานไม่ถูกต้อง")
 	}
 	
-	if err := ValidateStruct(&req); err != nil {
+	if err := validateStruct(&req); err != nil {
 		return err
 	}
 
@@ -82,7 +82,7 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 		return apperror.NewBadRequest("รูปแบบข้อมูลผู้ใช้งานไม่ถูกต้อง")
 	}
 
-	if err := ValidateStruct(&req); err != nil {
+	if err := validateStruct(&req); err != nil {
 		return err
 	}
 

@@ -24,7 +24,7 @@ func NewOrderHandler(service port.OrderService) *OrderHandler {
 // dto
 type CreateOrderRequest struct {
 	PaymentMethod domain.PaymentMethod  `json:"payment_method" validate:"required"`
-	Tickets       []CreateTicketRequest `json:"tickets" validate:"required,dive"`
+	Ticket        *CreateTicketRequest   `json:"ticket" validate:"required"`
 }
 
 type CreateTicketRequest struct {
@@ -39,17 +39,9 @@ type CreateTicketInfoRequest struct {
 // CreateOrder
 func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 	// id from cookie
-	userIDCookie := c.Locals("user_id")
-	if userIDCookie == nil {
-		return apperror.NewUnauthorized("ไม่ได้รับอนุญาต: ไม่พบข้อมูลผู้ใช้งาน")
-	}
-	userID, ok := userIDCookie.(uint)
-	if !ok {
-		if userIDFloat, ok := userIDCookie.(float64); ok {
-			userID = uint(userIDFloat)
-		} else {
-			return apperror.NewInternalServerError("ไม่สามารถแปลงประเภทข้อมูลผู้ใช้งานได้")
-		}
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
 	}
 
 	// logic
@@ -58,7 +50,7 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 		return apperror.NewBadRequest("รูปแบบข้อมูลคำสั่งซื้อไม่ถูกต้อง")
 	}
 
-	if err := ValidateStruct(&req); err != nil {
+	if err := validateStruct(&req); err != nil {
 		return err
 	}
 
@@ -66,17 +58,17 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 		CashierID:     userID,
 		PaymentMethod: req.PaymentMethod,
 	}
+	
+	ticket := domain.Ticket{}
 
-	for _, tReq := range req.Tickets {
-		ticket := domain.Ticket{}
-		for _, infoReq := range tReq.TicketInfo {
-			ticket.TicketInfos = append(ticket.TicketInfos, domain.TicketInfo{
-				TicketTypeID: infoReq.TicketTypeID,
-				Quantity:     infoReq.Quantity,
-			})
-		}
-		order.Tickets = append(order.Tickets, ticket)
+	for _, infoReq := range req.Ticket.TicketInfo {
+		ticket.TicketInfos = append(ticket.TicketInfos, domain.TicketInfo{
+			TicketTypeID: infoReq.TicketTypeID,
+			Quantity:     infoReq.Quantity,
+		})
 	}
+
+	order.Ticket = ticket
 
 	createdOrder, err := h.service.CreateOrder(order)
 	if err != nil {
@@ -211,3 +203,22 @@ func (h *OrderHandler) ListOrders(c *fiber.Ctx) error {
 }
 
 // PUT
+func (h *OrderHandler) CancelOrder(c *fiber.Ctx) error {
+	code := c.Params("code")
+
+	userID, err := getUserID(c)
+
+	if err != nil {
+		return err
+	}
+
+	err = h.service.CancelOrder(code,userID)
+
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "ยกเลิกตั๋วสำเร็จ",
+	})
+}

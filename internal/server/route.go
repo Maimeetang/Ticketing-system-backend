@@ -11,6 +11,7 @@ func (s *FiberServer) RegisterRoutes(
 	shiftHandler *http.ShiftHandler,
 	orderHandler *http.OrderHandler,
 	ticketTypeHandler *http.TicketTypeHandler,
+	ticketHandler *http.TicketHandler,
 ) {
 	// Root API Group
 	// ----------------------------------------------------
@@ -20,7 +21,7 @@ func (s *FiberServer) RegisterRoutes(
 	auth.Post("/login", authHandler.Login)
 	auth.Post("/logout", authHandler.Logout)
 
-	s.App.Use(http.AuthRequired(s.Cfg))
+	// s.App.Use(http.AuthRequired(s.Cfg))
 
 	// ----------------------------------------------------
 	// Protected User Administration (Guarded by role)
@@ -31,6 +32,8 @@ func (s *FiberServer) RegisterRoutes(
 	userRoutes.Delete("/:id", userHandler.DeleteUser)
 	userRoutes.Get("/:id", userHandler.GetUser)
 	userRoutes.Get("/", userHandler.ListUsers)
+
+	s.App.Use(http.AuthRequired(s.Cfg))
 
 	// ----------------------------------------------------
 	// Protected Shift Session Pipelines
@@ -51,9 +54,16 @@ func (s *FiberServer) RegisterRoutes(
 	// ----------------------------------------------------
 	// Protected Ticket Type
 	// ----------------------------------------------------
-	typeRoutes := s.App.Group("/tickets/types")
+	typeRoutes := s.App.Group("/ticket/types")
 	typeRoutes.Post("/", ticketTypeHandler.CreatedType)
 	typeRoutes.Put("/:id", ticketTypeHandler.UpdateType)
 	typeRoutes.Get("/:id", ticketTypeHandler.GetTicketType)
 	typeRoutes.Get("/", ticketTypeHandler.ListTicketType)
+
+	// ----------------------------------------------------
+	// Protected Ticket
+	// ----------------------------------------------------
+	ticketRoutes := s.App.Group("/ticket")
+	ticketRoutes.Post("/use/:code", ticketHandler.UseTicket)
+	ticketRoutes.Post("/cancell/:code", orderHandler.CancelOrder)
 }
