@@ -1,0 +1,12 @@
+tmp/
+.git/
+.gitignore
+
+vendor/
+go_cache/
+go_mod_cache/
+
+data/
+
+.env.*
+!.env.example

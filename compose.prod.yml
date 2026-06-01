@@ -1,0 +1,23 @@
+name: ticketing-system
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ticketing-backend
+    ports:
+      - "${PORT}:8080"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PORT=${PORT}
+      - APP_MODE=${APP_MODE}
+      - COOKIE_SECURE=${COOKIE_SECURE}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - ticketing-app-net
+    restart: always
+
+networks:
+  ticketing-app-net:
+    external: true

@@ -1,10 +1,10 @@
-name: ticketing-backend
+name: ticketing-backend-dev
 services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile.dev
-    container_name: ticketing-app
+      dockerfile: Dockerfile
+    container_name: ticketing-backend-dev
     ports:
       - "8080:8080"
     volumes:
@@ -16,7 +16,10 @@ services:
     working_dir: /app
     command: air
     environment:
-      - CGO_ENABLED=1
+      - PORT=8080
+      - APP_MODE=${APP_MODE:-development}
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-key}
     restart: unless-stopped
 
 volumes:
