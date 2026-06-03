@@ -4,7 +4,6 @@
   dir = "."
   include_ext = ["go", "tpl", "html"]
   exclude_dir = ["vendor", "assets", "tmp"]
-  run_after_build = "chmod +x ./tmp/main"
   poll = true
   poll_interval = 500
 
