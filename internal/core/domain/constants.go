@@ -1,12 +1,5 @@
 package domain
 
-type SyncStatus string
-
-const (
-	SyncPending SyncStatus = "PENDING" // Data is stored locally but not yet pushed to cloud
-	SyncSynced  SyncStatus = "SYNCED"  // Data successfully replicated to central cloud
-)
-
 type UserRole string
 
 const (

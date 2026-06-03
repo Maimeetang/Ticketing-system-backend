@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"ticketing-system/internal/adapters/handler/http"
 	"ticketing-system/internal/adapters/repository/orm"
@@ -11,24 +12,38 @@ import (
 	"ticketing-system/internal/core/service"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type FiberServer struct {
 	App *fiber.App
-	Cfg *config.AuthConfig
+	Cfg *config.Config
 }
 
 func New() *FiberServer {
 	// Initialize configuration values
-	cfg := config.LoadAuthConfig()
+	cfg := config.LoadConfig()
 
-	// Open internal SQLite file connection
-	db, err := gorm.Open(sqlite.Open("./data/local_tickets.db"), &gorm.Config{})
+	// PostgreSQL
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName)
+
+	db, err := gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("database initialization aborted (SQLite): %v", err)
+		log.Fatalf("failed to connect to database: %v", err)
 	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("failed to get underlying sql.DB: %v", err)
+	}
+	if err := sqlDB.Ping(); err != nil {
+		log.Fatalf("database initialization aborted (PostgreSQL): %v", err)
+	}
+
+	fmt.Println("Successfully connected to PostgreSQL via GORM!")
 
 	// Execute AutoMigrate constraints to secure storage tables
 	if err := db.AutoMigrate(

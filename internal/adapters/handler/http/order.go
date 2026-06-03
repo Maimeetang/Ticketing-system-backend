@@ -24,16 +24,8 @@ func NewOrderHandler(service port.OrderService) *OrderHandler {
 // dto
 type CreateOrderRequest struct {
 	PaymentMethod domain.PaymentMethod  `json:"payment_method" validate:"required"`
-	Ticket        *CreateTicketRequest   `json:"ticket" validate:"required"`
-}
-
-type CreateTicketRequest struct {
-	TicketInfo []CreateTicketInfoRequest `json:"ticket_info" validate:"required,dive"`
-}
-
-type CreateTicketInfoRequest struct {
-	TicketTypeID uint `json:"ticket_type_id" validate:"gt=0"`
-	Quantity     int  `json:"quantity" validate:"gt=0"`
+	TicketTypeID  uint 					`json:"ticket_type_id" validate:"gt=0"`
+	Quantity      int  					`json:"quantity" validate:"gt=0"`
 }
 
 // CreateOrder
@@ -54,23 +46,18 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 		return err
 	}
 
-	order := &domain.Order{
-		CashierID:     userID,
-		PaymentMethod: req.PaymentMethod,
-	}
+	ticketInfo 				:= domain.TicketInfo{}
+	ticketInfo.Quantity 	= req.Quantity
 	
-	ticket := domain.Ticket{}
+	ticket 						:= domain.Ticket{}
+	ticket.TicketInfo.Quantity 	= ticketInfo.Quantity
 
-	for _, infoReq := range req.Ticket.TicketInfo {
-		ticket.TicketInfos = append(ticket.TicketInfos, domain.TicketInfo{
-			TicketTypeID: infoReq.TicketTypeID,
-			Quantity:     infoReq.Quantity,
-		})
-	}
+	order 			   	:= &domain.Order{}
+	order.UserID		= userID
+	order.PaymentMethod = req.PaymentMethod
+	order.Ticket 		= ticket
 
-	order.Ticket = ticket
-
-	createdOrder, err := h.service.CreateOrder(order)
+	createdOrder, err := h.service.CreateOrder(order, req.TicketTypeID)
 	if err != nil {
 		return err
 	}

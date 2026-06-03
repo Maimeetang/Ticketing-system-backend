@@ -12,10 +12,10 @@ import (
 
 type authServiceImpl struct {
 	userRepo port.UserRepository
-	cfg *config.AuthConfig
+	cfg *config.Config
 }
 
-func NewAuthService(userRepo port.UserRepository, cfg *config.AuthConfig) port.AuthService {
+func NewAuthService(userRepo port.UserRepository, cfg *config.Config) port.AuthService {
 	return &authServiceImpl{
 		userRepo: userRepo,
 		cfg: cfg,

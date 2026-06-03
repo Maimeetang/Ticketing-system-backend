@@ -8,7 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func AuthRequired(cfg *config.AuthConfig) fiber.Handler {
+func AuthRequired(cfg *config.Config) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		tokenString := c.Cookies("access_token")
 		if tokenString == "" {

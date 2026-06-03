@@ -17,8 +17,8 @@ func NewOrderService(shiftRepo port.ShiftRepository, orderRepo port.OrderReposit
 	return &orderServiceImpl{shiftRepo, orderRepo, ticketTypeRepo}
 }
 
-func (s *orderServiceImpl) CreateOrder(order *domain.Order) (*domain.Order, error) {
-	shift, err := s.shiftRepo.GetActiveByUserID(order.CashierID)
+func (s *orderServiceImpl) CreateOrder(order *domain.Order, ticketTypeID uint) (*domain.Order, error) {
+	shift, err := s.shiftRepo.GetActiveByUserID(order.UserID)
 	
 	if err != nil {
 		return nil, err
@@ -32,37 +32,32 @@ func (s *orderServiceImpl) CreateOrder(order *domain.Order) (*domain.Order, erro
 
 	ticket := &order.Ticket
 
-	ticket.TicketCode = util.GenerateTicketCode(order.CashierID)
+	ticket.TicketCode = util.GenerateTicketCode(order.UserID)
 	ticket.Status = domain.TicketActive
 
 	var total float64
 
-	for i := range ticket.TicketInfos {
-		info := &ticket.TicketInfos[i]
-
-		ticketType, err := s.ticketTypeRepo.GetByID(info.TicketTypeID)
-		if err != nil {
-			return nil, err
-		}
-
-		if ticketType == nil {
-			return nil, apperror.NewNotFound("ไม่พบประเภทตั๋ว")
-		}
-
-		info.PricePerUnit = ticketType.Price
-
-		currentSum := ticketType.Price * float64(info.Quantity)
-		total += currentSum
+	ticketType, err := s.ticketTypeRepo.GetByID(ticketTypeID)
+	if err != nil {
+		return nil, err
 	}
+
+	if ticketType == nil {
+		return nil, apperror.NewNotFound("ไม่พบประเภทตั๋ว")
+	}
+
+	ticket.TicketInfo.TicketType = ticketType.Name
+	ticket.TicketInfo.PricePerUnit = ticketType.Price
+	total += ticketType.Price * float64(ticket.TicketInfo.Quantity)
 
 	ticket.TotalPrice = total
 	order.TotalPrice = total
 	order.Status = domain.OrderStatusPaid
 
 	ticket.TicketLogs = append(ticket.TicketLogs, domain.TicketLog{
+		UserID: 	 order.UserID,
 		FromStatus:  nil,
 		ToStatus:    domain.TicketActive,
-		TriggeredBy: order.CashierID,
 		Remarks:     "สร้างตั๋วสำเร็จ",
 	})
 
@@ -109,9 +104,9 @@ func (s *orderServiceImpl) CancelOrder(ticketCode string, userID uint) error {
 	order.Ticket.Status = domain.TicketCancelled
 
 	order.Ticket.TicketLogs = append(order.Ticket.TicketLogs, domain.TicketLog{
+		UserID: 	 order.UserID,
 		FromStatus:  &oldStatus,
 		ToStatus:    domain.TicketCancelled,
-		TriggeredBy: userID,
 		Remarks:     "ยกเลิกตั๋ว (พิมพ์ผิด)",
 	})
 

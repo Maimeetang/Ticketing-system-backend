@@ -1,14 +1,12 @@
-root = "."
-tmp_dir = "tmp"
-
 [build]
-  cmd = "CGO_ENABLED=1 go build -o ./tmp/main ./cmd/local"
-  bin = "tmp/main"
-  full_bin = "tmp/main"
-  include_ext = ["go", "c", "h"]
-  exclude_dir = ["tmp", "vendor", "data"]
+  cmd = "go build -o ./main ./cmd/local"
+  bin = "./main"
+  dir = "."
+  include_ext = ["go", "tpl", "html"]
+  exclude_dir = ["vendor", "assets", "tmp"]
+  run_after_build = "chmod +x ./main"
   poll = true
   poll_interval = 500
 
 [log]
-  time = true
+  level = "debug"

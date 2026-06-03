@@ -26,8 +26,7 @@ func (r *GormOrderRepository) CreateOrder(order *domain.Order) (*domain.Order, e
 
 func (r *GormOrderRepository) GetOrderByID(id uint) (*domain.Order, error) {
 	var order domain.Order
-	err := r.db.Preload("Ticket").
-				Preload("Ticket.TicketInfos").
+	err := r.db.Preload("Ticket.TicketInfo").
 				Preload("Ticket.TicketLogs").
 				First(&order, id).Error
 	if err != nil {
@@ -40,7 +39,6 @@ func (r *GormOrderRepository) GetByTicketCode(code string) (*domain.Order, error
 	var order domain.Order
 
 	err := r.db.
-		Preload("Ticket").
 		Preload("Ticket.TicketLogs").
 		Joins("Ticket").
 		Where("ticket_code = ?", code).
@@ -60,7 +58,7 @@ func (r *GormOrderRepository) ListOrders(filter domain.OrderFilter) ([]domain.Or
 	// initial query
 	query := r.db.Model(&domain.Order{})
 	if filter.IncludeTickets{
-		query = query.Preload("Ticket").Preload("Ticket.TicketInfos")
+		query = query.Preload("Ticket.TicketInfo")
 	}
 
 	// add filters to query
@@ -100,41 +98,7 @@ func (r *GormOrderRepository) ListOrders(filter domain.OrderFilter) ([]domain.Or
 }
 
 func (r *GormOrderRepository) UpdateOrder(order *domain.Order) (*domain.Order, error) {
-	err := r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&domain.Order{}).
-			Where("id = ?", order.ID).
-			Updates(map[string]any{
-				"status":      order.Status,
-				"total_price": order.TotalPrice,
-			}).Error; err != nil {
-			return err
-		}
-
-		if err := tx.Model(&domain.Ticket{}).
-			Where("id = ?", order.Ticket.ID).
-			Updates(map[string]any{
-				"status":      order.Ticket.Status,
-				"total_price": order.Ticket.TotalPrice,
-			}).Error; err != nil {
-			return err
-		}
-
-		var newLogs []domain.TicketLog
-		for _, log := range order.Ticket.TicketLogs {
-			if log.ID == 0 {
-				log.TicketID = order.Ticket.ID
-				newLogs = append(newLogs, log)
-			}
-		}
-
-		if len(newLogs) > 0 {
-			if err := tx.Create(&newLogs).Error; err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
+	err := r.db.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&order).Error
 
 	if err != nil {
 		return nil, handleError(err)

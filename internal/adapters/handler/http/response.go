@@ -61,7 +61,7 @@ func newShiftResponse(shift *domain.Shift) shiftResponse {
 // orderResponse represents a order response body
 type orderResponse struct {
 	ID            uint             `json:"id"`
-	CashierID     uint             `json:"cashier_id"`
+	UserID        uint             `json:"user_id"`
 	ShiftID       uint             `json:"shift_id"`
 	TotalPrice    float64          `json:"total_price"`
 	PaymentMethod string           `json:"payment_method"`
@@ -75,7 +75,7 @@ type orderResponse struct {
 func newOrderResponse(order *domain.Order) orderResponse {
 	return orderResponse{
 		ID:            order.ID,
-		CashierID:     order.CashierID,
+		UserID:        order.UserID,
 		ShiftID:       order.ShiftID,
 		TotalPrice:    order.TotalPrice,
 		PaymentMethod: string(order.PaymentMethod),
@@ -93,7 +93,7 @@ type ticketResponse struct {
 	TicketCode  string               `json:"ticket_code"`
 	Status      string               `json:"status"`
 	TotalPrice  float64              `json:"total_price"`
-	TicketInfos []ticketInfoResponse `json:"ticket_info"` 
+	TicketInfo  ticketInfoResponse 	 `json:"ticket_info"` 
 	TicketLogs  []ticketLogResponse  `json:"ticket_logs"` 
 	CreatedAt   time.Time            `json:"created_at"`
 	UpdatedAt   time.Time            `json:"updated_at"`
@@ -101,13 +101,6 @@ type ticketResponse struct {
 
 // newTicketResponse is a helper function to create a response body for handling ticket data
 func newTicketResponse(ticket *domain.Ticket) ticketResponse {
-	infos := make([]ticketInfoResponse, 0)
-	if len(ticket.TicketInfos) > 0 {
-		for _, info := range ticket.TicketInfos {
-			infos = append(infos, newTicketInfoResponse(&info))
-		}
-	}
-
 	logs := make([]ticketLogResponse, 0)
 	if len(ticket.TicketLogs) > 0 {
 		for _, log := range ticket.TicketLogs {
@@ -121,7 +114,7 @@ func newTicketResponse(ticket *domain.Ticket) ticketResponse {
 		TicketCode:  ticket.TicketCode,
 		Status:      string(ticket.Status),
 		TotalPrice:  ticket.TotalPrice,
-		TicketInfos: infos,
+		TicketInfo:  newTicketInfoResponse(&ticket.TicketInfo),
 		TicketLogs:  logs,
 		CreatedAt:   ticket.CreatedAt,
 		UpdatedAt:   ticket.UpdatedAt,
@@ -132,7 +125,7 @@ func newTicketResponse(ticket *domain.Ticket) ticketResponse {
 type ticketInfoResponse struct {
 	ID           uint      `json:"id"`
 	TicketID     uint      `json:"ticket_id"`
-	TicketTypeID uint      `json:"ticket_type_id"`
+	TicketType   string    `json:"ticket_type"`
 	Quantity     int       `json:"quantity"`
 	PricePerUnit float64   `json:"price_per_unit"`
 	CreatedAt    time.Time `json:"created_at"`
@@ -144,7 +137,7 @@ func newTicketInfoResponse(info *domain.TicketInfo) ticketInfoResponse {
 	return ticketInfoResponse{
 		ID:           info.ID,
 		TicketID:     info.TicketID,
-		TicketTypeID: info.TicketTypeID,
+		TicketType:	  info.TicketType,
 		Quantity:     info.Quantity,
 		PricePerUnit: info.PricePerUnit,
 		CreatedAt:    info.CreatedAt,
@@ -155,10 +148,10 @@ func newTicketInfoResponse(info *domain.TicketInfo) ticketInfoResponse {
 // ticketLogResponse represents a ticket log response body
 type ticketLogResponse struct {
 	ID          uint      `json:"id"`
+	UserID	    uint      `json:"user_id"`
 	TicketID    uint      `json:"ticket_id"`
 	FromStatus  string    `json:"from_status"` 
 	ToStatus    string    `json:"to_status"`
-	TriggeredBy uint      `json:"triggered_by"`
 	Remarks     string    `json:"remarks"` 
 	CreatedAt   time.Time `json:"created_at"`
 }
@@ -172,10 +165,10 @@ func newTicketLogResponse(log *domain.TicketLog) ticketLogResponse {
 	
 	return ticketLogResponse{
 		ID:          log.ID,
+		UserID: 	 log.UserID,
 		TicketID:    log.TicketID,
 		FromStatus:  fromStatusStr,
 		ToStatus:    string(log.ToStatus),
-		TriggeredBy: log.TriggeredBy,
 		Remarks:     log.Remarks,
 		CreatedAt:   log.CreatedAt,
 	}

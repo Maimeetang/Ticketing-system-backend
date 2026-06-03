@@ -37,9 +37,9 @@ func (s *TicketServiceImpl) UseTicket(code string, userID uint) error {
 	ticket.Status = domain.TicketUsed
 
 	ticket.TicketLogs = append(ticket.TicketLogs, domain.TicketLog{
+		UserID:  	 userID,
 		FromStatus:  &oldStatus,
 		ToStatus:    domain.TicketUsed,
-		TriggeredBy: userID,
 		Remarks:     "สแกนใช้งานตั๋ว",
 	})
 

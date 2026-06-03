@@ -17,9 +17,9 @@ func NewGormTicketRepository(db *gorm.DB) port.TicketRepository {
 
 func (r *GormTicketRepository) GetByCode(code string) (*domain.Ticket, error) {
 	var ticket domain.Ticket
-
 	err := r.db.
-		Preload("TicketLogs").
+		Preload("TicketLog").
+		Preload("TicketType").
 		Where("ticket_code = ?", code).
 		First(&ticket).Error
 
@@ -31,35 +31,7 @@ func (r *GormTicketRepository) GetByCode(code string) (*domain.Ticket, error) {
 }
 
 func (r *GormTicketRepository) UpdateTicket(ticket *domain.Ticket) error {
-	err := r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&domain.Ticket{}).
-			Where("id = ?", ticket.ID).
-			Updates(map[string]any{
-				"status":      ticket.Status,
-				"total_price": ticket.TotalPrice,
-			}).Error; err != nil {
-			return err
-		}
-
-		var newLogs []domain.TicketLog
-		for i := range ticket.TicketLogs {
-			log := ticket.TicketLogs[i]
-
-			if log.ID == 0 {
-				log.TicketID = ticket.ID
-				newLogs = append(newLogs, log)
-			}
-		}
-
-		if len(newLogs) > 0 {
-			if err := tx.Create(&newLogs).Error; err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
-
+	err := r.db.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&ticket).Error
 	if err != nil {
 		return handleError(err)
 	}
