@@ -1,10 +1,10 @@
 [build]
-  cmd = "go build -o ./main ./cmd/local"
-  bin = "./main"
+  cmd = "go build -o ./tmp/main ./cmd/local"
+  bin = "./tmp/main"
   dir = "."
   include_ext = ["go", "tpl", "html"]
   exclude_dir = ["vendor", "assets", "tmp"]
-  run_after_build = "chmod +x ./main"
+  run_after_build = "chmod +x ./tmp/main"
   poll = true
   poll_interval = 500
 
