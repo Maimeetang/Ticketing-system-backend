@@ -1,6 +1,6 @@
 name: POS-dev
 services:
-  app:
+  backend:
     image: cosmtrek/air:v1.65.3
     container_name: POS-backend
     ports:
@@ -20,6 +20,8 @@ services:
     restart: unless-stopped
     depends_on:
       - postgres
+    networks:
+      - POS-dev-net
 
   postgres:
     image: postgres:18-alpine
@@ -33,6 +35,12 @@ services:
     ports:
       - "${POSTGRES_PORT}:5432"
     restart: unless-stopped
+    networks:
+      - POS-dev-net
 
 volumes:
   postgres_data:
+
+networks:
+  POS-dev-net:
+    external: true
