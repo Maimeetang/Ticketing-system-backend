@@ -1,11 +1,11 @@
-package http
+package dto
 
 import (
 	"fmt"
 	"math"
 )
 
-type paginationParam struct {
+type PaginationParam struct {
 	Page    int `json:"page" query:"page"`
 	PerPage int `json:"per_page" query:"per_page"`
 }
@@ -23,7 +23,7 @@ type paginationResponse[T any] struct {
 	Records  []T      `json:"records"`
 }
 
-func NewPaginationResponse[T any](records []T, totalCount int64, param paginationParam, basePath string) *paginationResponse[T] {
+func NewPaginationResponse[T any](records []T, totalCount int64, param PaginationParam, basePath string) *paginationResponse[T] {
 	if param.Page < 1 {
 		param.Page = 1
 	}

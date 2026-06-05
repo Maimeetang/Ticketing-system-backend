@@ -1,6 +1,8 @@
-package http
+package v1
 
 import (
+	"ticketing-system/internal/adapters/handler/http/utils"
+	"ticketing-system/internal/adapters/handler/http/v1/dto"
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
@@ -18,7 +20,7 @@ func NewShiftHandler(shiftService port.ShiftService) *ShiftHandler {
 }
 
 func (h *ShiftHandler) ClockIn(c *fiber.Ctx) error {
-	userID, err := getUserID(c)
+	userID, err := utils.GetUserID(c)
 	if err != nil {
 		return err
 	}
@@ -35,7 +37,7 @@ func (h *ShiftHandler) ClockIn(c *fiber.Ctx) error {
 		return err
 	}
 
-	res := newShiftResponse(&shift)
+	res := dto.NewShiftResponse(&shift)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "เริ่มกะการทำงานสำเร็จ",
@@ -44,7 +46,7 @@ func (h *ShiftHandler) ClockIn(c *fiber.Ctx) error {
 }
 
 func (h *ShiftHandler) ClockOut(c *fiber.Ctx) error {
-	userID, err := getUserID(c)
+	userID, err := utils.GetUserID(c)
 	if err != nil {
 		return err
 	}
@@ -60,7 +62,7 @@ func (h *ShiftHandler) ClockOut(c *fiber.Ctx) error {
 }
 
 func (h *ShiftHandler) GetActiveShift(c *fiber.Ctx) error {
-	userID, err := getUserID(c)
+	userID, err := utils.GetUserID(c)
 	if err != nil {
 		return err
 	}
@@ -74,7 +76,7 @@ func (h *ShiftHandler) GetActiveShift(c *fiber.Ctx) error {
 		return apperror.NewNotFound("ไม่พบกะการทำงานที่กำลังเปิดอยู่")
 	}
 
-	res := newShiftResponse(shift)
+	res := dto.NewShiftResponse(shift)
 
 	return c.Status(fiber.StatusOK).JSON(res)
 }

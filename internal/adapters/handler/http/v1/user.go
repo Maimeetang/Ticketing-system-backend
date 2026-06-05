@@ -1,7 +1,9 @@
-package http
+package v1
 
 import (
 	"strconv"
+	"ticketing-system/internal/adapters/handler/http/v1/dto"
+	"ticketing-system/internal/adapters/handler/http/validation"
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
@@ -17,35 +19,15 @@ func NewUserHandler(service port.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
 
-// dto
-type CreateUserRequest struct {
-	Username           string `json:"username" validate:"required,min=4"`
-	Password           string `json:"password" validate:"required,min=6"`
-	Role               string `json:"role" validate:"required,oneof=CASHIER SCANNER"`
-	FirstName          string `json:"first_name" validate:"required"`
-	LastName           string `json:"last_name" validate:"required"`
-	PhoneNumber        string `json:"phone_number" validate:"required"`
-	ReservePhoneNumber string `json:"reserve_phone_number"`
-}
-
-type UpdateUserRequest struct {
-	Username           string `json:"username" validate:"required,min=4"`
-	Role               string `json:"role" validate:"required,oneof=CASHIER SCANNER"`
-	FirstName          string `json:"first_name" validate:"required"`
-	LastName           string `json:"last_name" validate:"required"`
-	PhoneNumber        string `json:"phone_number" validate:"required"`
-	ReservePhoneNumber string `json:"reserve_phone_number"`
-}
-
 // POST /users
 func (h *UserHandler) Register(c *fiber.Ctx) error {
-	var req CreateUserRequest
+	var req dto.CreateUserRequest
 
 	if err := c.BodyParser(&req); err != nil {
 		return apperror.NewBadRequest("รูปแบบข้อมูลผู้ใช้งานไม่ถูกต้อง")
 	}
 	
-	if err := validateStruct(&req); err != nil {
+	if err := validation.Validate(&req); err != nil {
 		return err
 	}
 
@@ -77,12 +59,12 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 		return apperror.NewBadRequest("id ผู้ใช้งานไม่ถูกต้อง")
 	}
 
-	var req UpdateUserRequest
+	var req dto.UpdateUserRequest
 	if err := c.BodyParser(&req); err != nil {
 		return apperror.NewBadRequest("รูปแบบข้อมูลผู้ใช้งานไม่ถูกต้อง")
 	}
 
-	if err := validateStruct(&req); err != nil {
+	if err := validation.Validate(&req); err != nil {
 		return err
 	}
 
@@ -105,7 +87,7 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	})
 }
 
-// DeleteUser
+// DELETE /users/:id
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
@@ -118,6 +100,7 @@ func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
+// GET /users/:id
 func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
@@ -133,20 +116,21 @@ func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 		return apperror.NewNotFound("ไม่พบผู้ใช้งาน")
 	}
 
-	res := newUserResponse(user)
+	res := dto.NewUserResponse(user)
 
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
+// GET /users
 func (h *UserHandler) ListUsers(c *fiber.Ctx) error {
 	users, err := h.service.ListUsers()
 	if err != nil {
 		return err
 	}
 
-	resList := make([]userResponse, len(users))
+	resList := make([]dto.UserResponse, len(users))
 	for i := range users {
-		resList[i] = newUserResponse(&users[i])
+		resList[i] = dto.NewUserResponse(&users[i])
 	}
 	
 

@@ -1,8 +1,11 @@
-package http
+package v1
 
 import (
 	"strconv"
 	"strings"
+	"ticketing-system/internal/adapters/handler/http/utils"
+	"ticketing-system/internal/adapters/handler/http/v1/dto"
+	"ticketing-system/internal/adapters/handler/http/validation"
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
@@ -20,28 +23,18 @@ func NewOrderHandler(service port.OrderService) *OrderHandler {
 }
 
 // POST /Orders/:id
-
-// dto
-type CreateOrderRequest struct {
-	PaymentMethod domain.PaymentMethod  `json:"payment_method" validate:"required"`
-	TicketTypeID  uint 					`json:"ticket_type_id" validate:"gt=0"`
-	Quantity      uint  				`json:"quantity" validate:"gt=0"`
-}
-
-// CreateOrder
 func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
-	// id from cookie
-	userID, err := getUserID(c)
+	userID, err := utils.GetUserID(c)
 	if err != nil {
 		return err
 	}
 
-	var req CreateOrderRequest
+	var req dto.CreateOrderRequest
 	if err := c.BodyParser(&req); err != nil {
 		return apperror.NewBadRequest("รูปแบบข้อมูลคำสั่งซื้อไม่ถูกต้อง")
 	}
 
-	if err := validateStruct(&req); err != nil {
+	if err := validation.Validate(&req); err != nil {
 		return err
 	}
 	
@@ -58,7 +51,7 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 		return err
 	}
 
-	res := newOrderResponse(createdOrder)
+	res := dto.NewOrderResponse(createdOrder)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "สร้างรายการขายสำเร็จ",
@@ -67,8 +60,6 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 }
 
 // GET /Orders/:id
-
-// GetOrderByID
 func (h *OrderHandler) GetOrderByID(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	id, err := strconv.ParseUint(idParam, 10, 32)
@@ -86,43 +77,14 @@ func (h *OrderHandler) GetOrderByID(c *fiber.Ctx) error {
 		return apperror.NewNotFound("ไม่พบคำสั่งซื้อ")
 	}
 
-	res := newOrderResponse(order)
+	res := dto.NewOrderResponse(order)
 
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
 // GET /Orders
-
-// dto
-type ListOrdersRequest struct {
-	Page           int    `query:"page"`
-	Limit          int    `query:"limit"`
-	Status         string `query:"status"`
-	PaymentMethod  string `query:"payment_method"`
-	CashierID      uint   `query:"cashier_id"`
-	ShiftID        uint   `query:"shift_id"`
-	IncludeTickets bool   `query:"include_tickets"`
-	Sort           string `query:"sort"`
-	From           string `query:"from"`
-	To             string `query:"to"`
-}
-
-// helper function
-func (h *OrderHandler) setListOrdersDefaults(f *ListOrdersRequest) {
-	if f.Page < 1 {
-		f.Page = 1
-	}
-	if f.Limit <= 0 {
-		f.Limit = 10
-	}
-	if f.Sort == "" {
-		f.Sort = "DESC"
-	}
-}
-
-// ListOrders
 func (h *OrderHandler) ListOrders(c *fiber.Ctx) error {
-	var req ListOrdersRequest
+	var req dto.ListOrdersRequest
 	if err := c.QueryParser(&req); err != nil {
 		return apperror.NewBadRequest("รูปแบบ query parameter ไม่ถูกต้อง")
 	}
@@ -171,25 +133,36 @@ func (h *OrderHandler) ListOrders(c *fiber.Ctx) error {
 		return err
 	}
 
-	records := make([]orderResponse, 0, len(orders))
+	records := make([]dto.OrderResponse, 0, len(orders))
 	for _, o := range orders {
-		records = append(records, newOrderResponse(&o))
+		records = append(records, dto.NewOrderResponse(&o))
 	}
 
-	param := paginationParam{
+	param := dto.PaginationParam{
 		Page:    filter.Page,
 		PerPage: filter.Limit,
 	}
-	res := NewPaginationResponse(records, totalCount, param, "/orders")
+	res := dto.NewPaginationResponse(records, totalCount, param, "/v1/orders")
 
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
-// PUT
+func (h *OrderHandler) setListOrdersDefaults(f *dto.ListOrdersRequest) {
+	if f.Page < 1 {
+		f.Page = 1
+	}
+	if f.Limit <= 0 {
+		f.Limit = 10
+	}
+	if f.Sort == "" {
+		f.Sort = "DESC"
+	}
+}
+
+// PUT /oreder/:code
 func (h *OrderHandler) CancelOrder(c *fiber.Ctx) error {
 	code := c.Params("code")
-
-	userID, err := getUserID(c)
+	userID, err := utils.GetUserID(c)
 
 	if err != nil {
 		return err

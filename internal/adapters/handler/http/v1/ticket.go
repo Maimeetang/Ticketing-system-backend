@@ -1,6 +1,7 @@
-package http
+package v1
 
 import (
+	"ticketing-system/internal/adapters/handler/http/utils"
 	"ticketing-system/internal/core/port"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,7 +18,7 @@ func NewTicketHandler(service port.TicketService) *TicketHandler{
 func (h *TicketHandler) UseTicket(c *fiber.Ctx) error {
 	code := c.Params("code")
 
-	userID, err := getUserID(c)
+	userID, err := utils.GetUserID(c)
 
 	if err != nil {
 		return err

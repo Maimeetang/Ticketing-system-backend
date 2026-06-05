@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"ticketing-system/internal/adapters/handler/http"
+	"ticketing-system/internal/adapters/handler/http/auth"
+	v1 "ticketing-system/internal/adapters/handler/http/v1"
 	"ticketing-system/internal/adapters/repository/orm"
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/config"
@@ -60,26 +61,26 @@ func New() *FiberServer {
 	// Construct Hexagonal Dependency Injection pipeline matching ports contract
 	userRepo := orm.NewGormUserRepository(db)
 	userService := service.NewUserService(userRepo)
-	userHandler := http.NewUserHandler(userService)
+	userHandler := v1.NewUserHandler(userService)
 
 	authService := service.NewAuthService(userRepo, cfg)
-	authHandler := http.NewAuthHandler(authService, cfg)
+	authHandler := auth.NewAuthHandler(authService, cfg)
 
 	shiftRepo := orm.NewGormShiftRepository(db)
 	shiftService := service.NewShiftService(shiftRepo)
-	shiftHandler := http.NewShiftHandler(shiftService)
+	shiftHandler := v1.NewShiftHandler(shiftService)
 
 	ticketTypeRepo := orm.NewGormTicketTypeRepository(db)
 	ticketTypeService := service.NewTicketTypeService(ticketTypeRepo)
-	ticketTypeHandler := http.NewTicketTypeHandler(ticketTypeService)
+	ticketTypeHandler := v1.NewTicketTypeHandler(ticketTypeService)
 
 	orderRepo := orm.NewGormOrderRepository(db)
 	orderService := service.NewOrderService(shiftRepo, orderRepo, ticketTypeRepo)
-	orderHandler := http.NewOrderHandler(orderService)
+	orderHandler := v1.NewOrderHandler(orderService)
 
 	ticketRepo := orm.NewGormTicketRepository(db)
 	ticketService := service.NewTicketService(ticketRepo)
-	ticketHandler := http.NewTicketHandler(ticketService)
+	ticketHandler := v1.NewTicketHandler(ticketService)
 
 	// Build Fiber application engine with centralized error interceptor
 	app := fiber.New(fiber.Config{
@@ -108,7 +109,7 @@ func New() *FiberServer {
 		Cfg: cfg,
 	}
 
-	server.RegisterRoutes(userHandler, authHandler, shiftHandler, orderHandler, ticketTypeHandler, ticketHandler)
+	server.RegisterRoutes(authHandler, userHandler, shiftHandler, orderHandler, ticketTypeHandler, ticketHandler)
 
 	return server
 }

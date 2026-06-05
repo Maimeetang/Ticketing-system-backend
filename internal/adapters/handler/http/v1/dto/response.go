@@ -1,4 +1,4 @@
-package http
+package dto
 
 import (
 	"ticketing-system/internal/core/domain"
@@ -6,7 +6,7 @@ import (
 )
 
 // userResponse represents a user response body
-type userResponse struct {
+type UserResponse struct {
 	ID                 uint   `json:"id"`
 	Username           string `json:"username"`
 	Role               string `json:"role"`
@@ -17,8 +17,8 @@ type userResponse struct {
 }
 
 // newUserResponse is a helper function to create a user body for handling user data
-func newUserResponse(user *domain.User) userResponse {
-	return userResponse{
+func NewUserResponse(user *domain.User) UserResponse {
+	return UserResponse{
 		ID: 	  			user.ID,
 		Username: 			user.Username,
 		Role: 				string(user.Role),
@@ -30,25 +30,25 @@ func newUserResponse(user *domain.User) userResponse {
 }
 
 // shiftResponse represents a shift response body
-type shiftResponse struct {
+type ShiftResponse struct {
 	ID        uint            `json:"id"`
 	UserID    uint            `json:"user_id"`
 	StartAt   time.Time       `json:"start_at"`
 	EndAt     *time.Time      `json:"end_at"` 
 	Status    string          `json:"status"`
-	Orders    []orderResponse `json:"orders"` 
+	Orders    []OrderResponse `json:"orders"` 
 }
 
 // newShiftResponse is a helper function to create a response body for handling shift data
-func newShiftResponse(shift *domain.Shift) shiftResponse {
-	orders := make([]orderResponse, 0)
+func NewShiftResponse(shift *domain.Shift) ShiftResponse {
+	orders := make([]OrderResponse, 0)
 	if len(shift.Orders) > 0 {
 		for _, o := range shift.Orders {
-			orders = append(orders, newOrderResponse(&o))
+			orders = append(orders, NewOrderResponse(&o))
 		}
 	}
 
-	return shiftResponse{
+	return ShiftResponse{
 		ID:      shift.ID,
 		UserID:  shift.UserID,
 		StartAt: shift.StartAt,
@@ -59,35 +59,35 @@ func newShiftResponse(shift *domain.Shift) shiftResponse {
 }
 
 // orderResponse represents a order response body
-type orderResponse struct {
+type OrderResponse struct {
 	ID            uint             `json:"id"`
 	UserID        uint             `json:"user_id"`
 	ShiftID       uint             `json:"shift_id"`
 	TotalPrice    float64          `json:"total_price"`
 	PaymentMethod string           `json:"payment_method"`
 	Status        string           `json:"status"`
-	Ticket        ticketResponse   `json:"ticket"` 
+	Ticket        TicketResponse   `json:"ticket"` 
 	CreatedAt     time.Time        `json:"created_at"`
 	UpdatedAt     time.Time        `json:"updated_at"`
 }
 
 // newOrderResponse is a helper function to create a response body for handling order data
-func newOrderResponse(order *domain.Order) orderResponse {
-	return orderResponse{
+func NewOrderResponse(order *domain.Order) OrderResponse {
+	return OrderResponse{
 		ID:            order.ID,
 		UserID:        order.UserID,
 		ShiftID:       order.ShiftID,
 		TotalPrice:    order.TotalPrice,
 		PaymentMethod: string(order.PaymentMethod),
 		Status:        string(order.Status),
-		Ticket:        newTicketResponse(&order.Ticket),
+		Ticket:        NewTicketResponse(&order.Ticket),
 		CreatedAt:     order.CreatedAt,
 		UpdatedAt:     order.UpdatedAt,
 	}
 }
 
 // ticketResponse represents a ticket response body
-type ticketResponse struct {
+type TicketResponse struct {
 	ID           uint                `json:"id"`
 	OrderID      uint                `json:"order_id"`
 	TicketCode   string              `json:"ticket_code"`
@@ -95,21 +95,21 @@ type ticketResponse struct {
 	TicketType   string				 `json:"ticket_type"`
 	Quantity     uint				 `json:"quantity"`
 	PricePerUnit float64			 `json:"price_per_unit"`
-	TicketLogs   []ticketLogResponse `json:"ticket_logs"` 
+	TicketLogs   []TicketLogResponse `json:"ticket_logs"` 
 	CreatedAt    time.Time           `json:"created_at"`
 	UpdatedAt    time.Time           `json:"updated_at"`
 }
 
 // newTicketResponse is a helper function to create a response body for handling ticket data
-func newTicketResponse(ticket *domain.Ticket) ticketResponse {
-	logs := make([]ticketLogResponse, 0)
+func NewTicketResponse(ticket *domain.Ticket) TicketResponse {
+	logs := make([]TicketLogResponse, 0)
 	if len(ticket.TicketLogs) > 0 {
 		for _, log := range ticket.TicketLogs {
-			logs = append(logs, newTicketLogResponse(&log))
+			logs = append(logs, NewTicketLogResponse(&log))
 		}
 	}
 
-	return ticketResponse{
+	return TicketResponse{
 		ID:         	ticket.ID,
 		OrderID:    	ticket.OrderID,
 		TicketCode: 	ticket.TicketCode,
@@ -124,7 +124,7 @@ func newTicketResponse(ticket *domain.Ticket) ticketResponse {
 }
 
 // ticketLogResponse represents a ticket log response body
-type ticketLogResponse struct {
+type TicketLogResponse struct {
 	ID          uint      `json:"id"`
 	UserID	    uint      `json:"user_id"`
 	TicketID    uint      `json:"ticket_id"`
@@ -135,13 +135,13 @@ type ticketLogResponse struct {
 }
 
 // newTicketLogResponse is a helper function to create a response body for handling ticket log data
-func newTicketLogResponse(log *domain.TicketLog) ticketLogResponse {
+func NewTicketLogResponse(log *domain.TicketLog) TicketLogResponse {
 	var fromStatusStr string
 	if log.FromStatus != nil {
 		fromStatusStr = string(*log.FromStatus)
 	}
 	
-	return ticketLogResponse{
+	return TicketLogResponse{
 		ID:          log.ID,
 		UserID: 	 log.UserID,
 		TicketID:    log.TicketID,
