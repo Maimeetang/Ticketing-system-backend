@@ -88,15 +88,16 @@ func newOrderResponse(order *domain.Order) orderResponse {
 
 // ticketResponse represents a ticket response body
 type ticketResponse struct {
-	ID          uint                 `json:"id"`
-	OrderID     uint                 `json:"order_id"`
-	TicketCode  string               `json:"ticket_code"`
-	Status      string               `json:"status"`
-	TotalPrice  float64              `json:"total_price"`
-	TicketInfo  ticketInfoResponse 	 `json:"ticket_info"` 
-	TicketLogs  []ticketLogResponse  `json:"ticket_logs"` 
-	CreatedAt   time.Time            `json:"created_at"`
-	UpdatedAt   time.Time            `json:"updated_at"`
+	ID           uint                `json:"id"`
+	OrderID      uint                `json:"order_id"`
+	TicketCode   string              `json:"ticket_code"`
+	Status       string              `json:"status"`
+	TicketType   string				 `json:"ticket_type"`
+	Quantity     uint				 `json:"quantity"`
+	PricePerUnit float64			 `json:"price_per_unit"`
+	TicketLogs   []ticketLogResponse `json:"ticket_logs"` 
+	CreatedAt    time.Time           `json:"created_at"`
+	UpdatedAt    time.Time           `json:"updated_at"`
 }
 
 // newTicketResponse is a helper function to create a response body for handling ticket data
@@ -109,39 +110,16 @@ func newTicketResponse(ticket *domain.Ticket) ticketResponse {
 	}
 
 	return ticketResponse{
-		ID:          ticket.ID,
-		OrderID:     ticket.OrderID,
-		TicketCode:  ticket.TicketCode,
-		Status:      string(ticket.Status),
-		TotalPrice:  ticket.TotalPrice,
-		TicketInfo:  newTicketInfoResponse(&ticket.TicketInfo),
-		TicketLogs:  logs,
-		CreatedAt:   ticket.CreatedAt,
-		UpdatedAt:   ticket.UpdatedAt,
-	}
-}
-
-// ticketInfoResponse represents a ticket info response body
-type ticketInfoResponse struct {
-	ID           uint      `json:"id"`
-	TicketID     uint      `json:"ticket_id"`
-	TicketType   string    `json:"ticket_type"`
-	Quantity     int       `json:"quantity"`
-	PricePerUnit float64   `json:"price_per_unit"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
-}
-
-// newTicketInfoResponse is a helper function to create a response body for handling ticket info data
-func newTicketInfoResponse(info *domain.TicketInfo) ticketInfoResponse {
-	return ticketInfoResponse{
-		ID:           info.ID,
-		TicketID:     info.TicketID,
-		TicketType:	  info.TicketType,
-		Quantity:     info.Quantity,
-		PricePerUnit: info.PricePerUnit,
-		CreatedAt:    info.CreatedAt,
-		UpdatedAt:    info.UpdatedAt,
+		ID:         	ticket.ID,
+		OrderID:    	ticket.OrderID,
+		TicketCode: 	ticket.TicketCode,
+		Status:     	string(ticket.Status),
+		TicketType:		ticket.TicketType,
+		Quantity:		ticket.Quantity,
+		PricePerUnit: 	ticket.PricePerUnit,
+		TicketLogs: 	logs,
+		CreatedAt:  	ticket.CreatedAt,
+		UpdatedAt:  	ticket.UpdatedAt,
 	}
 }
 

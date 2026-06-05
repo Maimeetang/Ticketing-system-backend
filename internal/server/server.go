@@ -51,7 +51,6 @@ func New() *FiberServer {
 		&domain.Shift{}, 
 		&domain.Order{}, 
 		&domain.Ticket{}, 
-		&domain.TicketInfo{}, 
 		&domain.TicketLog{},
 		&domain.TicketType{},
 	); err != nil {

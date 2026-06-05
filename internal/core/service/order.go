@@ -46,11 +46,10 @@ func (s *orderServiceImpl) CreateOrder(order *domain.Order, ticketTypeID uint) (
 		return nil, apperror.NewNotFound("ไม่พบประเภทตั๋ว")
 	}
 
-	ticket.TicketInfo.TicketType = ticketType.Name
-	ticket.TicketInfo.PricePerUnit = ticketType.Price
-	total += ticketType.Price * float64(ticket.TicketInfo.Quantity)
+	ticket.TicketType = ticketType.Name
+	ticket.PricePerUnit = ticketType.Price
+	total += ticketType.Price * float64(ticket.Quantity)
 
-	ticket.TotalPrice = total
 	order.TotalPrice = total
 	order.Status = domain.OrderStatusPaid
 

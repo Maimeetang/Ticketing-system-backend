@@ -26,8 +26,7 @@ func (r *GormOrderRepository) CreateOrder(order *domain.Order) (*domain.Order, e
 
 func (r *GormOrderRepository) GetOrderByID(id uint) (*domain.Order, error) {
 	var order domain.Order
-	err := r.db.Preload("Ticket.TicketInfo").
-				Preload("Ticket.TicketLogs").
+	err := r.db.Preload("Ticket.TicketLogs").
 				First(&order, id).Error
 	if err != nil {
 		return nil, handleError(err)
@@ -58,7 +57,7 @@ func (r *GormOrderRepository) ListOrders(filter domain.OrderFilter) ([]domain.Or
 	// initial query
 	query := r.db.Model(&domain.Order{})
 	if filter.IncludeTickets{
-		query = query.Preload("Ticket.TicketInfo")
+		query = query.Preload("Ticket")
 	}
 
 	// add filters to query

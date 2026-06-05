@@ -25,7 +25,7 @@ func NewOrderHandler(service port.OrderService) *OrderHandler {
 type CreateOrderRequest struct {
 	PaymentMethod domain.PaymentMethod  `json:"payment_method" validate:"required"`
 	TicketTypeID  uint 					`json:"ticket_type_id" validate:"gt=0"`
-	Quantity      int  					`json:"quantity" validate:"gt=0"`
+	Quantity      uint  				`json:"quantity" validate:"gt=0"`
 }
 
 // CreateOrder
@@ -36,7 +36,6 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 		return err
 	}
 
-	// logic
 	var req CreateOrderRequest
 	if err := c.BodyParser(&req); err != nil {
 		return apperror.NewBadRequest("รูปแบบข้อมูลคำสั่งซื้อไม่ถูกต้อง")
@@ -45,12 +44,9 @@ func (h *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 	if err := validateStruct(&req); err != nil {
 		return err
 	}
-
-	ticketInfo 				:= domain.TicketInfo{}
-	ticketInfo.Quantity 	= req.Quantity
 	
-	ticket 						:= domain.Ticket{}
-	ticket.TicketInfo.Quantity 	= ticketInfo.Quantity
+	ticket 				:= domain.Ticket{}
+	ticket.Quantity 	= req.Quantity
 
 	order 			   	:= &domain.Order{}
 	order.UserID		= userID
