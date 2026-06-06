@@ -33,31 +33,43 @@ func NewUserResponse(user *domain.User) UserResponse {
 
 // shiftResponse represents a shift response body
 type ShiftResponse struct {
-	ID        uint            `json:"id"`
-	UserID    uint            `json:"user_id"`
-	StartAt   time.Time       `json:"start_at"`
-	EndAt     *time.Time      `json:"end_at"` 
-	Status    string          `json:"status"`
-	Orders    []OrderResponse `json:"orders"` 
+	ID        		uint		`json:"id"`
+	UserID    		uint		`json:"user_id"`
+	CashierName		string		`json:"cashier_name"`	
+	OpenAt   		time.Time	`json:"open_at"`
+	CloseAt     	*time.Time	`json:"close_at"` 
+	Status    		string		`json:"status"`
+	TotalOrders 	uint		`json:"total_order"`
+	PaidOrders 		uint		`json:"paid_order"`
+	CancelledOrders uint		`json:"cancelled_order"`
+	TotalRevenue 	int64		`json:"total_revenue"`
 }
 
 // newShiftResponse is a helper function to create a response body for handling shift data
 func NewShiftResponse(shift *domain.Shift) ShiftResponse {
-	orders := make([]OrderResponse, 0)
-	if len(shift.Orders) > 0 {
-		for _, o := range shift.Orders {
-			orders = append(orders, NewOrderResponse(&o))
-		}
-	}
-
 	return ShiftResponse{
-		ID:      shift.ID,
-		UserID:  shift.UserID,
-		StartAt: shift.StartAt,
-		EndAt:   shift.EndAt,
-		Status:  string(shift.Status),
-		Orders:  orders,
+		ID:      	 	 shift.ID,
+		UserID:  	 	 shift.UserID,
+		CashierName: 	 shift.User.FirstName + " " + shift.User.LastName,
+		OpenAt: 	 	 shift.OpenAt,
+		CloseAt:   		 shift.CloseAt,
+		Status:  		 string(shift.Status),
+		TotalOrders: 	 shift.TotalOrders,
+		PaidOrders: 	 shift.PaidOrders,
+		CancelledOrders: shift.CancelledOrders,
+		TotalRevenue: 	 shift.TotalRevenue,
 	}
+}
+
+type ShiftSummaryResponse struct {
+	ID          uint       `json:"id"`
+	UserID      uint       `json:"user_id"`
+	StartAt     time.Time  `json:"start_at"`
+	EndAt       *time.Time `json:"end_at"`
+	Status      string     `json:"status"`
+
+	TotalOrders int     `json:"total_orders"`
+	Revenue     float64 `json:"revenue"`
 }
 
 // orderResponse represents a order response body

@@ -15,26 +15,31 @@ func NewShiftService(repo port.ShiftRepository) port.ShiftService {
 	return &shiftServiceImpl{repo: repo}
 }
 
-// Business Core logic
-func (s *shiftServiceImpl) ClockIn(shift *domain.Shift) (*domain.Shift, error) {
-	activeShift, err := s.repo.GetActiveByUserID(shift.UserID)
+func (s *shiftServiceImpl) OpenShift(userID uint) (*domain.Shift, error) {
+	currentShift, err := s.repo.GetCurrentByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	if activeShift != nil {
+	if currentShift != nil {
 		return nil, apperror.NewConflict("คุณมีกะการทำงานที่เปิดอยู่แล้ว")
 	}
 
-	if err := s.repo.CreateShift(shift); err != nil {
+	shift := &domain.Shift{
+		UserID: userID,
+		OpenAt: time.Now(),
+		Status: domain.ShiftOpen,
+	}
+
+	if err := s.repo.Create(shift); err != nil {
 		return nil, err
 	}
 
 	return shift, nil
 }
 
-func (s *shiftServiceImpl) ClockOut(userID uint) error {
-	shift, err := s.repo.GetActiveByUserID(userID)
+func (s *shiftServiceImpl) CloseShift(id uint)  error {
+	shift, err := s.repo.GetByID(id)
 
 	if err != nil {
 		return err
@@ -44,19 +49,44 @@ func (s *shiftServiceImpl) ClockOut(userID uint) error {
 		return apperror.NewNotFound("ไม่พบกะการทำงานที่กำลังเปิดอยู่")
 	}
 
+	if shift.Status == domain.ShiftClosed {
+		return apperror.NewConflict("กะทำงานนี้ถูกปิดอยู่แล้ว")
+	}
+
 	now := time.Now()
-	shift.EndAt = &now
+
+	shift.CloseAt = &now
 	shift.Status = domain.ShiftClosed
 
-	return s.repo.UpdateShift(shift)
+	return s.repo.Update(shift)
 }
 
-func (s *shiftServiceImpl) GetUserActiveShift(userID uint) (*domain.Shift, error) {
-	shift, err := s.repo.GetActiveByUserID(userID)
-
+func (s *shiftServiceImpl) GetCurrentShift(userID uint) (*domain.Shift, error) {
+	shift, err := s.repo.GetCurrentByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
 
+	if shift == nil {
+		return nil, apperror.NewNotFound("ไม่พบกะการทำงานที่กำลังเปิดอยู่")
+	}
+
 	return shift, nil
+}
+
+func (s *shiftServiceImpl) GetShiftByID(id uint) (*domain.Shift, error) {
+	shift, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if shift == nil {
+		return nil, apperror.NewNotFound("ไม่พบกะการทำงาน")
+	}
+
+	return shift, nil
+}
+
+func (s *shiftServiceImpl) ListShifts(filter domain.ShiftFilter) ([]domain.Shift, error) {
+	return s.repo.List(filter)
 }

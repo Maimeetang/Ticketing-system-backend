@@ -21,6 +21,12 @@ type UpdateUserRequest struct {
 	ReservePhoneNumber string `json:"reserve_phone_number"`
 }
 
+type ListShiftRequest struct {
+	CashierID *uint	 				`query:"cashier_id"`
+	Status 	  *domain.ShiftStatus 	`query:"status"`
+	StartDate string 				`query:"start_date"`
+}
+
 type CreateOrderRequest struct {
 	PaymentMethod domain.PaymentMethod `json:"payment_method" validate:"required"`
 	TicketTypeID  uint                 `json:"ticket_type_id" validate:"gt=0"`

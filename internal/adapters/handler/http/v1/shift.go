@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"strconv"
 	"ticketing-system/internal/adapters/handler/http/utils"
 	"ticketing-system/internal/adapters/handler/http/v1/dto"
 	"ticketing-system/internal/apperror"
@@ -12,46 +13,40 @@ import (
 )
 
 type ShiftHandler struct {
-	shiftService port.ShiftService
+	service port.ShiftService
 }
 
-func NewShiftHandler(shiftService port.ShiftService) *ShiftHandler {
-	return &ShiftHandler{shiftService: shiftService}
+func NewShiftHandler(service port.ShiftService) *ShiftHandler {
+	return &ShiftHandler{service: service}
 }
 
-func (h *ShiftHandler) ClockIn(c *fiber.Ctx) error {
+// POST /shifts
+func (h *ShiftHandler) OpenShift(c *fiber.Ctx) error {
 	userID, err := utils.GetUserID(c)
 	if err != nil {
 		return err
 	}
 
-	shift := domain.Shift{
-		UserID:    userID,
-		StartAt:   time.Now(),
-		EndAt:     nil,
-		Status:    domain.ShiftOpen,
-	}
-
-	_, err = h.shiftService.ClockIn(&shift)
+	shift, err := h.service.OpenShift(userID)
 	if err != nil {
 		return err
 	}
-
-	res := dto.NewShiftResponse(&shift)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "เริ่มกะการทำงานสำเร็จ",
-		"data":    res,
+		"data":    dto.NewShiftResponse(shift),
 	})
 }
 
-func (h *ShiftHandler) ClockOut(c *fiber.Ctx) error {
-	userID, err := utils.GetUserID(c)
+// POST /shifts/:id
+func (h *ShiftHandler) CloseShift(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	id, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
-		return err
+		return apperror.NewBadRequest("id ผู้ใช้งานไม่ถูกต้อง")
 	}
 
-	err = h.shiftService.ClockOut(userID)
+	err = h.service.CloseShift(uint(id))
 	if err != nil {
 		return err
 	}
@@ -61,22 +56,69 @@ func (h *ShiftHandler) ClockOut(c *fiber.Ctx) error {
 	})
 }
 
-func (h *ShiftHandler) GetActiveShift(c *fiber.Ctx) error {
+// GET /shifts/current
+func (h *ShiftHandler) GetCurrentShift(c *fiber.Ctx) error {
 	userID, err := utils.GetUserID(c)
 	if err != nil {
 		return err
 	}
 
-	shift, err := h.shiftService.GetUserActiveShift(userID)
+	shift, err := h.service.GetCurrentShift(userID)
 	if err != nil {
 		return err
 	}
 
-	if shift == nil {
-		return apperror.NewNotFound("ไม่พบกะการทำงานที่กำลังเปิดอยู่")
+	return c.Status(fiber.StatusOK).JSON(dto.NewShiftResponse(shift))
+}
+
+// GET /shifts/:id
+func (h *ShiftHandler) GetShiftByID(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	id, err := strconv.ParseUint(idParam, 10, 32)
+	if err != nil {
+		return apperror.NewBadRequest("id ผู้ใช้งานไม่ถูกต้อง")
 	}
 
-	res := dto.NewShiftResponse(shift)
+	shift, err := h.service.GetShiftByID(uint(id))
+	if err != nil {
+		return err
+	}
 
-	return c.Status(fiber.StatusOK).JSON(res)
+	return c.Status(fiber.StatusOK).JSON(dto.NewShiftResponse(shift))
+}
+
+// GET /shifts
+func (h *ShiftHandler) ListShifts(c *fiber.Ctx) error {
+	var req dto.ListShiftRequest
+
+	if err := c.QueryParser(&req); err != nil {
+		return apperror.NewBadRequest("query parameters ไม่ถูกต้อง")
+	}
+
+	if req.StartDate == "" {
+		return apperror.NewBadRequest("ต้องระบุ start_date ใน query parameters")
+	}
+
+	startDate, err := time.Parse("2006-01-02", req.StartDate)
+	if err != nil {
+		return apperror.NewBadRequest("start_date ต้องเป็นฟอร์แมต YYYY-MM-DD format")
+	}
+
+	filter := domain.ShiftFilter{
+		UserID:    req.CashierID,
+		Status:    req.Status,
+		StartDate: &startDate,
+	}
+
+	shifts, err := h.service.ListShifts(filter)
+	if err != nil {
+		return err
+	}
+
+	res := make([]dto.ShiftResponse, 0, len(shifts))
+	for _, shift := range shifts {
+		res = append(res, dto.NewShiftResponse(&shift))
+	}
+
+	return c.JSON(res)
 }

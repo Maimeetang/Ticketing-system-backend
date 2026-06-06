@@ -18,7 +18,7 @@ func NewOrderService(shiftRepo port.ShiftRepository, orderRepo port.OrderReposit
 }
 
 func (s *orderServiceImpl) CreateOrder(order *domain.Order, ticketTypeID uint) (*domain.Order, error) {
-	shift, err := s.shiftRepo.GetActiveByUserID(order.UserID)
+	shift, err := s.shiftRepo.GetCurrentByUserID(order.UserID)
 	
 	if err != nil {
 		return nil, err

@@ -24,7 +24,7 @@ func (s *FiberServer) RegisterRoutes(
 	auth.Post("/logout", authHandler.Logout)
 
 	v1 := s.App.Group("/v1")
-	v1.Use(middleware.AuthRequired(s.Cfg))
+	// v1.Use(middleware.AuthRequired(s.Cfg))
 
 	// ----------------------------------------------------
 	// Protected User Administration (Guarded by role)
@@ -37,13 +37,17 @@ func (s *FiberServer) RegisterRoutes(
 	userRoutes.Get("/:id", userHandler.GetUserByID)
 	userRoutes.Get("/", userHandler.ListUsers)
 
+	v1.Use(middleware.AuthRequired(s.Cfg))
+
 	// ----------------------------------------------------
 	// Protected Shift Session Pipelines
 	// ----------------------------------------------------
 	shiftRoutes := v1.Group("/shifts")
-	shiftRoutes.Post("/start", shiftHandler.ClockIn)
-	shiftRoutes.Post("/end", shiftHandler.ClockOut)
-	shiftRoutes.Get("/active", shiftHandler.GetActiveShift)
+	shiftRoutes.Post("/open", shiftHandler.OpenShift)
+	shiftRoutes.Put("/:id/close", shiftHandler.CloseShift)
+	shiftRoutes.Get("/current", shiftHandler.GetCurrentShift)
+	shiftRoutes.Get("/:id", shiftHandler.GetShiftByID)
+	shiftRoutes.Get("/", shiftHandler.ListShifts)
 
 	// ----------------------------------------------------
 	// Protected Orders & Sales Module
