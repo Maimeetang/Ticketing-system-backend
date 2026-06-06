@@ -20,7 +20,7 @@ func Validate(s any) error {
 		var messages []string
 
 		for _, fieldErr := range validationErrors {
-			fieldName := strings.ToLower(fieldErr.Field())
+			fieldName := fieldErr.Field()
 
 			switch fieldErr.Tag() {
 			case "required":
