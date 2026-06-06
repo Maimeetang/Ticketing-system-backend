@@ -39,6 +39,7 @@ func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 		LastName:    req.LastName,
 		PhoneNumber: req.PhoneNumber,
 		ReservePhoneNumber: req.ReservePhoneNumber,
+		IsActive: true,
 	}
 
 	err := h.service.RegisterUser(&user)
