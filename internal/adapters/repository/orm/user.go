@@ -22,16 +22,7 @@ func (r *GormUserRepository) CreateUser(u *domain.User) error {
 }
 
 func (r *GormUserRepository) UpdateUser(u *domain.User) error {
-	update := map[string]any{
-		"username":             u.Username,
-		"role":                 u.Role,
-		"first_name":           u.FirstName,
-		"last_name":            u.LastName,
-		"phone_number":         u.PhoneNumber,
-		"reserve_phone_number": u.ReservePhoneNumber,
-	}
-
-	result := r.db.Model(&domain.User{}).Where("id = ?", u.ID).Updates(update)
+	result := r.db.Model(&domain.User{}).Updates(u)
 
 	if result.Error != nil {
 		return handleError(result.Error)
@@ -44,16 +35,17 @@ func (r *GormUserRepository) UpdateUser(u *domain.User) error {
 	return nil
 }
 
-func (r *GormUserRepository) DeleteUser(id uint) error {
-	result := r.db.Delete(&domain.User{}, id)
+func (r *GormUserRepository) SetActiveUser(id uint, active bool) error{
+	result := r.db.
+		Model(&domain.User{}).
+		Where("id = ?", id).
+		Update("is_active", active)
 
-	if result.Error != nil {
-		return handleError(result.Error)
-	}
 	if result.RowsAffected == 0 {
 		return apperror.NewNotFound("user")
 	}
-	return nil
+
+	return handleError(result.Error)
 }
 
 func (r *GormUserRepository) GetUserByID(id uint) (*domain.User, error) {

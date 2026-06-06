@@ -20,7 +20,7 @@ func NewUserHandler(service port.UserService) *UserHandler {
 }
 
 // POST /users
-func (h *UserHandler) Register(c *fiber.Ctx) error {
+func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 	var req dto.CreateUserRequest
 
 	if err := c.BodyParser(&req); err != nil {
@@ -41,7 +41,7 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		ReservePhoneNumber: req.ReservePhoneNumber,
 	}
 
-	err := h.service.Register(&user)
+	err := h.service.RegisterUser(&user)
 	if err != nil {
 		return err 
 	}
@@ -87,27 +87,40 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	})
 }
 
-// DELETE /users/:id
-func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
+// PATCH /users/:id/disable
+func (h *UserHandler) DisableUser(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
 		return apperror.NewBadRequest("id ผู้ใช้งานไม่ถูกต้อง")
 	}
 
-	if err := h.service.DeleteUser(uint(id)); err != nil {
+	if err := h.service.DisableUser(uint(id)); err != nil {
 		return err
 	}
-	return c.SendStatus(fiber.StatusNoContent)
+	return c.SendStatus(fiber.StatusOK)
+}
+
+// PATCH /users/:id/enable
+func (h *UserHandler) EnableUser(c *fiber.Ctx) error {
+	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
+	if err != nil {
+		return apperror.NewBadRequest("id ผู้ใช้งานไม่ถูกต้อง")
+	}
+
+	if err := h.service.EnableUser(uint(id)); err != nil {
+		return err
+	}
+	return c.SendStatus(fiber.StatusOK)
 }
 
 // GET /users/:id
-func (h *UserHandler) GetUser(c *fiber.Ctx) error {
+func (h *UserHandler) GetUserByID(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
 		return apperror.NewBadRequest("id ผู้ใช้งานไม่ถูกต้อง")
 	}
 
-	user, err := h.service.GetUser(uint(id))
+	user, err := h.service.GetUserByID(uint(id))
 	if err != nil {
 		return err
 	}

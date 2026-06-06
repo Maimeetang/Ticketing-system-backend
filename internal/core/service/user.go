@@ -29,7 +29,7 @@ func (s *userServiceImpl) usernameValidation(id uint, username string) error {
 	return nil
 }
 
-func (s *userServiceImpl) Register(user *domain.User) error {
+func (s *userServiceImpl) RegisterUser(user *domain.User) error {
 	err := s.usernameValidation(user.ID, user.Username)
 	if err != nil{
 		return err
@@ -54,11 +54,15 @@ func (s *userServiceImpl) UpdateUser(user *domain.User) error {
 	return s.repo.UpdateUser(user)
 }
 
-func (s *userServiceImpl) DeleteUser(id uint) error {
-	return s.repo.DeleteUser(id)
+func (s *userServiceImpl) DisableUser(id uint) error {
+	return s.repo.SetActiveUser(id, false)
 }
 
-func (s *userServiceImpl) GetUser(id uint) (*domain.User, error) {
+func (s *userServiceImpl) EnableUser(id uint) error {
+	return s.repo.SetActiveUser(id, true)
+}
+
+func (s *userServiceImpl) GetUserByID(id uint) (*domain.User, error) {
 	user, err := s.repo.GetUserByID(id)
 	if err != nil {
 		return nil, err

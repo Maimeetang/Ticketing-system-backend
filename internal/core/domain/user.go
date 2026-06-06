@@ -11,6 +11,7 @@ type User struct {
 	LastName           string
 	PhoneNumber        string
 	ReservePhoneNumber string
+	IsActive		   bool
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
 }
