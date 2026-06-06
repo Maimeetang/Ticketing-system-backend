@@ -17,7 +17,7 @@ func NewUserService(repo port.UserRepository) port.UserService{
 
 // Business Core logic
 func (s *userServiceImpl) usernameValidation(id uint, username string) error {
-	existingUser, err := s.repo.GetUserByUsername(username)
+	existingUser, err := s.repo.GetByUsername(username)
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (s *userServiceImpl) usernameValidation(id uint, username string) error {
 	return nil
 }
 
-func (s *userServiceImpl) Register(user *domain.User) error {
+func (s *userServiceImpl) RegisterUser(user *domain.User) error {
 	err := s.usernameValidation(user.ID, user.Username)
 	if err != nil{
 		return err
@@ -42,7 +42,7 @@ func (s *userServiceImpl) Register(user *domain.User) error {
 
 	user.Password = string(hashedPassword)
 
-	return s.repo.CreateUser(user)
+	return s.repo.Create(user)
 }
 
 func (s *userServiceImpl) UpdateUser(user *domain.User) error {
@@ -51,15 +51,19 @@ func (s *userServiceImpl) UpdateUser(user *domain.User) error {
 		return err
 	}
 
-	return s.repo.UpdateUser(user)
+	return s.repo.Update(user)
 }
 
-func (s *userServiceImpl) DeleteUser(id uint) error {
-	return s.repo.DeleteUser(id)
+func (s *userServiceImpl) DisableUser(id uint) error {
+	return s.repo.SetActive(id, false)
 }
 
-func (s *userServiceImpl) GetUser(id uint) (*domain.User, error) {
-	user, err := s.repo.GetUserByID(id)
+func (s *userServiceImpl) EnableUser(id uint) error {
+	return s.repo.SetActive(id, true)
+}
+
+func (s *userServiceImpl) GetUserByID(id uint) (*domain.User, error) {
+	user, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -67,5 +71,5 @@ func (s *userServiceImpl) GetUser(id uint) (*domain.User, error) {
 }
 
 func (s *userServiceImpl) ListUsers() ([]domain.User, error) {
-	return s.repo.ListUsers()
+	return s.repo.List()
 }

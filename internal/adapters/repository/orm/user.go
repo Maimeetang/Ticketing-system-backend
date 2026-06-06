@@ -16,22 +16,13 @@ func NewGormUserRepository(db *gorm.DB) port.UserRepository {
   	return &GormUserRepository{db: db}
 }
 
-func (r *GormUserRepository) CreateUser(u *domain.User) error {
+func (r *GormUserRepository) Create(u *domain.User) error {
 	err := r.db.Create(u).Error
 	return handleError(err)
 }
 
-func (r *GormUserRepository) UpdateUser(u *domain.User) error {
-	update := map[string]any{
-		"username":             u.Username,
-		"role":                 u.Role,
-		"first_name":           u.FirstName,
-		"last_name":            u.LastName,
-		"phone_number":         u.PhoneNumber,
-		"reserve_phone_number": u.ReservePhoneNumber,
-	}
-
-	result := r.db.Model(&domain.User{}).Where("id = ?", u.ID).Updates(update)
+func (r *GormUserRepository) Update(u *domain.User) error {
+	result := r.db.Model(&domain.User{}).Updates(u)
 
 	if result.Error != nil {
 		return handleError(result.Error)
@@ -44,19 +35,20 @@ func (r *GormUserRepository) UpdateUser(u *domain.User) error {
 	return nil
 }
 
-func (r *GormUserRepository) DeleteUser(id uint) error {
-	result := r.db.Delete(&domain.User{}, id)
+func (r *GormUserRepository) SetActive(id uint, active bool) error{
+	result := r.db.
+		Model(&domain.User{}).
+		Where("id = ?", id).
+		Update("is_active", active)
 
-	if result.Error != nil {
-		return handleError(result.Error)
-	}
 	if result.RowsAffected == 0 {
 		return apperror.NewNotFound("user")
 	}
-	return nil
+
+	return handleError(result.Error)
 }
 
-func (r *GormUserRepository) GetUserByID(id uint) (*domain.User, error) {
+func (r *GormUserRepository) GetByID(id uint) (*domain.User, error) {
 	var user domain.User
 	err := r.db.First(&user, id).Error
 	if err != nil {
@@ -65,7 +57,7 @@ func (r *GormUserRepository) GetUserByID(id uint) (*domain.User, error) {
 	return &user, nil
 }
 
-func (r *GormUserRepository) GetUserByUsername(username string) (*domain.User, error) {
+func (r *GormUserRepository) GetByUsername(username string) (*domain.User, error) {
 	var user domain.User
 	err := r.db.Where("username = ?", username).First(&user).Error
 	if err != nil {
@@ -74,7 +66,7 @@ func (r *GormUserRepository) GetUserByUsername(username string) (*domain.User, e
 	return &user, nil
 }
 
-func (r *GormUserRepository) ListUsers() ([]domain.User, error) {
+func (r *GormUserRepository) List() ([]domain.User, error) {
 	var users []domain.User
 	err := r.db.Find(&users).Error
 	if err != nil {

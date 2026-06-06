@@ -14,6 +14,7 @@ type UserResponse struct {
 	LastName           string `json:"last_name"`
 	PhoneNumber        string `json:"phone_number"`
 	ReservePhoneNumber string `json:"reserve_phone_number"`
+	IsActive		   bool	  `json:"is_active"`
 }
 
 // newUserResponse is a helper function to create a user body for handling user data
@@ -26,6 +27,7 @@ func NewUserResponse(user *domain.User) UserResponse {
 		LastName: 			user.LastName,
 		PhoneNumber: 		user.PhoneNumber,
 		ReservePhoneNumber: user.ReservePhoneNumber,
+		IsActive:			user.IsActive,
 	}
 }
 

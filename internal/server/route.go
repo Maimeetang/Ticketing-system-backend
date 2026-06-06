@@ -30,10 +30,11 @@ func (s *FiberServer) RegisterRoutes(
 	// Protected User Administration (Guarded by role)
 	// ----------------------------------------------------
 	userRoutes := v1.Group("/users")
-	userRoutes.Post("/", userHandler.Register)
+	userRoutes.Post("/", userHandler.RegisterUser)
 	userRoutes.Put("/:id", userHandler.UpdateUser)
-	userRoutes.Delete("/:id", userHandler.DeleteUser)
-	userRoutes.Get("/:id", userHandler.GetUser)
+	userRoutes.Patch("/:id/disable", userHandler.DisableUser)
+	userRoutes.Patch("/:id/enable", userHandler.EnableUser)
+	userRoutes.Get("/:id", userHandler.GetUserByID)
 	userRoutes.Get("/", userHandler.ListUsers)
 
 	// ----------------------------------------------------
