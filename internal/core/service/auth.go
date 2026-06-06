@@ -4,7 +4,7 @@ import (
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/config"
 	"ticketing-system/internal/core/port"
-	"ticketing-system/internal/core/util"
+	"ticketing-system/internal/core/utils"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -30,7 +30,7 @@ func (s *authServiceImpl) Login(username, password string) (string, error) {
 	}
 
 	// Check password
-	err = util.ComparePassword(password, user.Password)
+	err = utils.ComparePassword(password, user.Password)
 	if err != nil {
 		return "", apperror.NewUnauthorized("username หรือ password ไม่ถูกต้อง")
 	}

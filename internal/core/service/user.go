@@ -4,7 +4,7 @@ import (
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
-	"ticketing-system/internal/core/util"
+	"ticketing-system/internal/core/utils"
 )
 
 type userServiceImpl struct {
@@ -35,7 +35,7 @@ func (s *userServiceImpl) RegisterUser(user *domain.User) error {
 		return err
 	}
 
-	hashedPassword, err := util.HashPassword(user.Password)
+	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {
 		return apperror.NewInternalServerError("ไม่สามารถเข้ารหัสรหัสผ่านได้: " + err.Error())
 	}

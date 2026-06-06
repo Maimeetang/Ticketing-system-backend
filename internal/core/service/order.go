@@ -4,7 +4,7 @@ import (
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"
 	"ticketing-system/internal/core/port"
-	"ticketing-system/internal/core/util"
+	"ticketing-system/internal/core/utils"
 )
 
 type orderServiceImpl struct {
@@ -32,7 +32,7 @@ func (s *orderServiceImpl) CreateOrder(order *domain.Order, ticketTypeID uint) (
 
 	ticket := &order.Ticket
 
-	ticket.TicketCode = util.GenerateTicketCode(order.UserID)
+	ticket.TicketCode = utils.GenerateTicketCode(order.UserID)
 	ticket.Status = domain.TicketActive
 
 	var total float64
