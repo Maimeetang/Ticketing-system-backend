@@ -1,4 +1,4 @@
-package v1
+package http
 
 import (
 	"ticketing-system/internal/adapters/handler/http/utils"

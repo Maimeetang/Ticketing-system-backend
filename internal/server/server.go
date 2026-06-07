@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"ticketing-system/internal/adapters/handler/http/auth"
-	v1 "ticketing-system/internal/adapters/handler/http/v1"
+	"ticketing-system/internal/adapters/handler/http"
 	"ticketing-system/internal/adapters/repository/orm"
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/config"
@@ -61,26 +60,26 @@ func New() *FiberServer {
 	// Construct Hexagonal Dependency Injection pipeline matching ports contract
 	userRepo := orm.NewGormUserRepository(db)
 	userService := service.NewUserService(userRepo)
-	userHandler := v1.NewUserHandler(userService)
+	userHandler := http.NewUserHandler(userService)
 
 	authService := service.NewAuthService(userRepo, cfg)
-	authHandler := auth.NewAuthHandler(authService, cfg)
+	authHandler := http.NewAuthHandler(authService, cfg)
 
 	shiftRepo := orm.NewGormShiftRepository(db)
 	shiftService := service.NewShiftService(shiftRepo)
-	shiftHandler := v1.NewShiftHandler(shiftService)
+	shiftHandler := http.NewShiftHandler(shiftService)
 
 	ticketTypeRepo := orm.NewGormTicketTypeRepository(db)
 	ticketTypeService := service.NewTicketTypeService(ticketTypeRepo)
-	ticketTypeHandler := v1.NewTicketTypeHandler(ticketTypeService)
+	ticketTypeHandler := http.NewTicketTypeHandler(ticketTypeService)
 
 	orderRepo := orm.NewGormOrderRepository(db)
 	orderService := service.NewOrderService(shiftRepo, orderRepo, ticketTypeRepo)
-	orderHandler := v1.NewOrderHandler(orderService)
+	orderHandler := http.NewOrderHandler(orderService)
 
 	ticketRepo := orm.NewGormTicketRepository(db)
 	ticketService := service.NewTicketService(ticketRepo)
-	ticketHandler := v1.NewTicketHandler(ticketService)
+	ticketHandler := http.NewTicketHandler(ticketService)
 
 	// Build Fiber application engine with centralized error interceptor
 	app := fiber.New(fiber.Config{

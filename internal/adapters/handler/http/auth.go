@@ -1,4 +1,4 @@
-package auth
+package http
 
 import (
 	"ticketing-system/internal/config"

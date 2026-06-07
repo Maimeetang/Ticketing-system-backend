@@ -1,8 +1,8 @@
-package v1
+package http
 
 import (
 	"strconv"
-	"ticketing-system/internal/adapters/handler/http/v1/dto"
+	"ticketing-system/internal/adapters/handler/http/dto"
 	"ticketing-system/internal/adapters/handler/http/validation"
 	"ticketing-system/internal/apperror"
 	"ticketing-system/internal/core/domain"

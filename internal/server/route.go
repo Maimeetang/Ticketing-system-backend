@@ -1,19 +1,18 @@
 package server
 
 import (
-	"ticketing-system/internal/adapters/handler/http/auth"
+	"ticketing-system/internal/adapters/handler/http"
 	"ticketing-system/internal/adapters/handler/http/middleware"
-	v1 "ticketing-system/internal/adapters/handler/http/v1"
 )
 
 // RegisterRoutes orchestrates and mounts all HTTP endpoint mappings
 func (s *FiberServer) RegisterRoutes(
-	authHandler *auth.AuthHandler,
-	userHandler *v1.UserHandler,
-	shiftHandler *v1.ShiftHandler,
-	orderHandler *v1.OrderHandler,
-	ticketTypeHandler *v1.TicketTypeHandler,
-	ticketHandler *v1.TicketHandler,
+	authHandler *http.AuthHandler,
+	userHandler *http.UserHandler,
+	shiftHandler *http.ShiftHandler,
+	orderHandler *http.OrderHandler,
+	ticketTypeHandler *http.TicketTypeHandler,
+	ticketHandler *http.TicketHandler,
 ) {
 	// Root API Group
 	// ----------------------------------------------------
@@ -23,13 +22,12 @@ func (s *FiberServer) RegisterRoutes(
 	auth.Post("/login", authHandler.Login)
 	auth.Post("/logout", authHandler.Logout)
 
-	v1 := s.App.Group("/v1")
 	// v1.Use(middleware.AuthRequired(s.Cfg))
 
 	// ----------------------------------------------------
 	// Protected User Administration (Guarded by role)
 	// ----------------------------------------------------
-	userRoutes := v1.Group("/users")
+	userRoutes :=  s.App.Group("/users")
 	userRoutes.Post("/", userHandler.RegisterUser)
 	userRoutes.Put("/:id", userHandler.UpdateUser)
 	userRoutes.Patch("/:id/disable", userHandler.DisableUser)
@@ -37,12 +35,12 @@ func (s *FiberServer) RegisterRoutes(
 	userRoutes.Get("/:id", userHandler.GetUserByID)
 	userRoutes.Get("/", userHandler.ListUsers)
 
-	v1.Use(middleware.AuthRequired(s.Cfg))
+	 s.App.Use(middleware.AuthRequired(s.Cfg))
 
 	// ----------------------------------------------------
 	// Protected Shift Session Pipelines
 	// ----------------------------------------------------
-	shiftRoutes := v1.Group("/shifts")
+	shiftRoutes :=  s.App.Group("/shifts")
 	shiftRoutes.Post("/open", shiftHandler.OpenShift)
 	shiftRoutes.Put("/:id/close", shiftHandler.CloseShift)
 	shiftRoutes.Get("/current", shiftHandler.GetCurrentShift)
@@ -52,7 +50,7 @@ func (s *FiberServer) RegisterRoutes(
 	// ----------------------------------------------------
 	// Protected Orders & Sales Module
 	// ----------------------------------------------------
-	orderRoutes := v1.Group("/orders")
+	orderRoutes :=  s.App.Group("/orders")
 	orderRoutes.Post("/", orderHandler.CreateOrder)
 	orderRoutes.Get("/:id", orderHandler.GetOrderByID)
 	orderRoutes.Get("/", orderHandler.ListOrders)
@@ -60,7 +58,7 @@ func (s *FiberServer) RegisterRoutes(
 	// ----------------------------------------------------
 	// Protected Ticket Type
 	// ----------------------------------------------------
-	typeRoutes := v1.Group("/ticket/types")
+	typeRoutes :=  s.App.Group("/ticket/types")
 	typeRoutes.Post("/", ticketTypeHandler.CreatedType)
 	typeRoutes.Put("/:id", ticketTypeHandler.UpdateType)
 	typeRoutes.Get("/:id", ticketTypeHandler.GetTicketType)
@@ -69,7 +67,7 @@ func (s *FiberServer) RegisterRoutes(
 	// ----------------------------------------------------
 	// Protected Ticket
 	// ----------------------------------------------------
-	ticketRoutes := v1.Group("/ticket")
+	ticketRoutes :=  s.App.Group("/ticket")
 	ticketRoutes.Post("/use/:code", ticketHandler.UseTicket)
 	ticketRoutes.Post("/cancell/:code", orderHandler.CancelOrder)
 }

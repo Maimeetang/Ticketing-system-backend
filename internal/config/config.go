@@ -6,36 +6,28 @@ import (
 )
 
 type Config struct {
-	JWTSecret string
+	JWTSecret 	 string
 	CookieSecure bool
-	DBHost     string
-	DBPort     int
-	DBUser     string
-	DBPassword string
-	DBName     string
+	DBHost     	 string
+	DBPort     	 int
+	DBUser     	 string
+	DBPassword 	 string
+	DBName     	 string
 }
 
 func LoadConfig() *Config {
 	port, err := strconv.Atoi(os.Getenv("DB_PORT"))
 	if err != nil {
-		port = 5432
+		port = 8080
 	}
 
 	return &Config{
-		JWTSecret:    getEnv("JWT_SECRET", "your_super_secret_jwt_key"),
-		CookieSecure: os.Getenv("COOKIE_SECURE") == "true",
-
-		DBHost:     getEnv("POSTGRES_HOST", "localhost"),
-		DBPort:     port,
-		DBUser:     getEnv("POSTGRES_USER", "postgres"),
-		DBPassword: getEnv("POSTGRES_PASSWORD", "postgres"),
-		DBName:     getEnv("POSTGRES_DB", "ticketing_db"),
+		JWTSecret:    os.Getenv("JWT_SECRET"),
+		CookieSecure: os.Getenv("APP_ENV") != "development ",
+		DBHost:       os.Getenv("POSTGRES_HOST"),
+		DBPort:       port,
+		DBUser:       os.Getenv("POSTGRES_USER"),
+		DBPassword:   os.Getenv("POSTGRES_PASSWORD"),
+		DBName:       os.Getenv("POSTGRES_DB"),
 	}
-}
-
-func getEnv(key, fallback string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return fallback
 }
