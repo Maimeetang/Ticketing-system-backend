@@ -1,13 +1,15 @@
 name: pos-dev
 services:
   backend:
-    image: cosmtrek/air:v1.65.3
+    build:
+      context: .
+      target: builder
     container_name: pos-backend-dev
     ports:
       - "${PORT}:8080"
     volumes:
       - ./:/app
-    working_dir: /app
+    command: ["air", "-c", ".air.toml"]
     environment:
       - PORT=${PORT}
       - COOKIE_SECURE=${COOKIE_SECURE}
