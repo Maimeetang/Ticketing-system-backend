@@ -80,7 +80,7 @@ func (s *userServiceImpl) RegisterUser(
 		return e.NewBadRequest("password must be at least 8 characters long")
 	}
 	
-	password, err := hashPassword(password)
+	password, err := HashPassword(password)
 	if err != nil {
 		return e.NewInternalServerError("password encryption failed")
 	}

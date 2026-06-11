@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"ticketing-system/config"
+	seed "ticketing-system/internal/adapters/db"
 	db "ticketing-system/internal/adapters/db/postgres"
 	h "ticketing-system/internal/adapters/http/handlers"
 	middleware "ticketing-system/internal/adapters/http/middleware"
@@ -38,6 +39,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("❌ AutoMigration failed: %v", err)
 	}
+
+	seed.SeedAdminAccount(
+		gormDB, 
+		cfg.DefaultAdminUsername, 
+		cfg.DefaultAdminPassword,
+		cfg.DefaultAdminFirstname,
+		cfg.DefaultAdminLastname,
+		cfg.DefaultAdminPhonenumber,
+	)
 
 	// ==========================================
 	// INITIALIZE ADAPTERS (DATABASE LAYER)

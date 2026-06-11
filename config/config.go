@@ -17,6 +17,12 @@ type Config struct {
 	PostgresUser     string
 	PostgresPassword string
 
+	DefaultAdminUsername string
+	DefaultAdminPassword string
+	DefaultAdminFirstname string
+	DefaultAdminLastname string
+	DefaultAdminPhonenumber string
+
 	JwtSecret string
 }
 
@@ -34,6 +40,12 @@ func LoadConfig() *Config {
 		PostgresDB:       os.Getenv("POSTGRES_DB"),
 		PostgresUser:     os.Getenv("POSTGRES_USER"),
 		PostgresPassword: os.Getenv("POSTGRES_PASSWORD"),
+
+		DefaultAdminUsername:    os.Getenv("DEFAULT_ADMIN_USERNAME"),
+		DefaultAdminPassword:    os.Getenv("DEFAULT_ADMIN_PASSWORD"),
+		DefaultAdminFirstname:   os.Getenv("DEFAULT_ADMIN_FIRSTNAME"),
+		DefaultAdminLastname:    os.Getenv("DEFAULT_ADMIN_LASTNAME"),
+		DefaultAdminPhonenumber: os.Getenv("DEFAULT_ADMIN_PHONENUMBER"),
 		
 		JwtSecret:        os.Getenv("JWT_SECRET"),
 	}
