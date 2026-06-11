@@ -95,7 +95,7 @@ func (s *ticketServiceImpl) CreateTicket(
 			return e.NewForbidden("please open a shift before selling tickets")
 		}
 
-		ticketType, err := s.ticketTypeRepo.GetByID(ticketTypeID)
+		ticketType, err := s.ticketTypeRepo.GetByID(txCtx, ticketTypeID)
 		if err != nil {
 			return err
 		}

@@ -1,8 +1,8 @@
-package orm
+package db
 
 import (
 	"context"
-	domains "ticketing-system/internal/core/models"
+	m "ticketing-system/internal/core/models"
 	r "ticketing-system/internal/core/repositories"
 
 	"gorm.io/gorm"
@@ -19,8 +19,8 @@ func NewGormTicketRepository(db *gorm.DB) r.TicketRepository {
 
 func (r *gormTicketRepository) Create(
 	ctx context.Context,
-	ticket *domains.Ticket,
-) (*domains.Ticket, error) {
+	ticket *m.Ticket,
+) (*m.Ticket, error) {
 	db := bind(ctx, r.db)
 
 	if err := db.Create(ticket).Error; err != nil {
@@ -32,8 +32,8 @@ func (r *gormTicketRepository) Create(
 func (r *gormTicketRepository) GetByID(
 	ctx context.Context,
 	id uint,
-) (*domains.Ticket, error) {
-	var ticket domains.Ticket
+) (*m.Ticket, error) {
+	var ticket m.Ticket
 	db := bind(ctx, r.db)
 
 	err := db.WithContext(ctx).First(&ticket, id).Error
@@ -44,8 +44,8 @@ func (r *gormTicketRepository) GetByID(
 func (r *gormTicketRepository) GetByCodeForUpdate(
 	ctx context.Context,
 	code string,
-) (*domains.Ticket, error) {
-	var ticket domains.Ticket
+) (*m.Ticket, error) {
+	var ticket m.Ticket
 	db := bind(ctx, r.db)
 
 	err := db.
@@ -58,7 +58,7 @@ func (r *gormTicketRepository) GetByCodeForUpdate(
 
 func (r *gormTicketRepository) Update(
 	ctx context.Context, 
-	ticket *domains.Ticket,
+	ticket *m.Ticket,
 ) error {
 	db := bind(ctx, r.db)
 

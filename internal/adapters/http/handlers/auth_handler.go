@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	dto "ticketing-system/internal/adapters/http/handlers/dto"
+	dto "ticketing-system/internal/adapters/http/dto"
 	e "ticketing-system/internal/core/error"
 	s "ticketing-system/internal/core/services"
 	"time"
@@ -11,15 +11,19 @@ import (
 
 type AuthHandler struct {
 	authService s.AuthService
+	cookieSecure bool
+	JWTSecret string
 }
 
-func NewAuthHandler(authService s.AuthService) *AuthHandler {
+func NewAuthHandler(authService s.AuthService, cookieSecure bool, JWTSecret string) *AuthHandler {
 	return &AuthHandler{
 		authService: authService,
+		cookieSecure: cookieSecure,
+		JWTSecret: JWTSecret,
 	}
 }
 
-func (h *AuthHandler) Login(c *fiber.Ctx, CookieSecure bool, JWTSecret string) error {
+func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	var req dto.LoginRequest
 
 	if err := c.BodyParser(&req); err != nil {
@@ -28,7 +32,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx, CookieSecure bool, JWTSecret string) e
 
 	ctx := c.UserContext()
 
-	token, err := h.authService.Login(ctx, req.Username, req.Password, JWTSecret)
+	token, err := h.authService.Login(ctx, req.Username, req.Password, h.JWTSecret)
 	if err != nil {
 		return err
 	}
@@ -38,7 +42,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx, CookieSecure bool, JWTSecret string) e
 		Value:    token,
 		Expires:  time.Now().Add(time.Hour * 24),
 		HTTPOnly: true,
-		Secure:   CookieSecure,
+		Secure:   h.cookieSecure,
 		SameSite: fiber.CookieSameSiteLaxMode,
 		Path:     "/",
 	})
@@ -48,13 +52,13 @@ func (h *AuthHandler) Login(c *fiber.Ctx, CookieSecure bool, JWTSecret string) e
 	})
 }
 
-func (h *AuthHandler) Logout(c *fiber.Ctx, CookieSecure bool) error {
+func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 	c.Cookie(&fiber.Cookie{
 		Name:     "access_token",
 		Value:    "",
 		Expires:  time.Now().Add(-time.Hour),
 		HTTPOnly: true,
-		Secure:   CookieSecure,
+		Secure:   h.cookieSecure,
 		SameSite: fiber.CookieSameSiteLaxMode,
 		Path:     "/",
 	})

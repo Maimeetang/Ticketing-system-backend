@@ -1,11 +1,14 @@
 package repositories
 
-import m "ticketing-system/internal/core/models"
+import (
+	"context"
+	m "ticketing-system/internal/core/models"
+)
 
 type TicketTypeRepository interface {
-	CreateTicketType(ticketType *m.TicketType) (*m.TicketType, error)
-	UpdateTicketType(ticketType *m.TicketType) (*m.TicketType, error)
-	GetByID(id uint) (*m.TicketType, error)
-	GetByName(name string) (*m.TicketType, error)
-	ListTicketType() ([]m.TicketType, error)
+	Create(ctx context.Context, ticketType *m.TicketType) (*m.TicketType, error)
+	Update(ctx context.Context, ticketType *m.TicketType) (*m.TicketType, error)
+	SetActive(ctx context.Context, id uint, active bool) error
+	GetByID(ctx context.Context, id uint) (*m.TicketType, error)
+	List(ctx context.Context, withDisable bool) ([]m.TicketType, error)
 }

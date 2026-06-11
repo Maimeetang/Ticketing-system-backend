@@ -12,7 +12,7 @@ services:
     command: ["air", "-c", ".air.toml"]
     environment:
       - PORT=${PORT}
-      - COOKIE_SECURE=${COOKIE_SECURE}
+      - APP_ENV=${APP_ENV}
       - JWT_SECRET=${JWT_SECRET}
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}

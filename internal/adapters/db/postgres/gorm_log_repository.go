@@ -1,4 +1,4 @@
-package orm
+package db
 
 import (
 	"context"
@@ -11,7 +11,7 @@ type GormTicketLogRepository struct {
 	db *gorm.DB
 }
 
-func NewgormTicketLogRepository(db *gorm.DB) r.TicketLogRepository {
+func NewGormTicketLogRepository(db *gorm.DB) r.TicketLogRepository {
 	return &GormTicketLogRepository{db: db}
 }
 

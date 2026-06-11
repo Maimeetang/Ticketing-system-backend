@@ -1,4 +1,4 @@
-package orm
+package db
 
 import (
 	"context"
@@ -35,7 +35,7 @@ func (r *GormUserRepository) Update(ctx context.Context, u *m.User) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return e.NewNotFound("user")
+		return e.NewNotFound("user not found")
 	}
 
 	return nil
@@ -50,7 +50,7 @@ func (r *GormUserRepository) SetActive(ctx context.Context, id uint, active bool
 		Update("is_active", active)
 
 	if result.RowsAffected == 0 {
-		return e.NewNotFound("user")
+		return e.NewNotFound("user not found")
 	}
 
 	return handleError(result.Error)
