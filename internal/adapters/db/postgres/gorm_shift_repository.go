@@ -117,8 +117,8 @@ func (r *GormShiftRepository) GetCurrentByUserIDForUpdate(
 func (r *GormShiftRepository) GetByDate(
 	ctx context.Context, 
 	targetDate time.Time,
-) (*m.Shift, error) {
-	var shift m.Shift
+) ([]m.Shift, error) {
+	var shifts []m.Shift
 
 	startOfDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, targetDate.Location())
 	endOfDay := startOfDay.AddDate(0, 0, 1).Add(-time.Second)
@@ -126,14 +126,14 @@ func (r *GormShiftRepository) GetByDate(
 	err := bind(ctx, r.db).
 		Preload("User").
 		Where("open_at BETWEEN ? AND ?", startOfDay, endOfDay).
-		First(&shift).
+		Find(&shifts).
 		Error
 
 	if err != nil {
 		return nil, handleError(err)
 	}
 
-	return &shift, nil
+	return shifts, nil
 }
 
 func (r *GormShiftRepository) CalculateSummary(ctx context.Context, shift *m.Shift) error {

@@ -29,22 +29,29 @@ func NewUserResponse(user *m.User) UserResponse {
 }
 
 type ShiftResponse struct {
-	ID        		 uint		  `json:"id"`
-	UserID    		 uint		  `json:"userId"`
-	User		 	 UserResponse `json:"user"`	
-	OpenAt   		 time.Time	  `json:"openAt"`
-	CloseAt     	 *time.Time	  `json:"closeAt"` 
-	Status    		 string		  `json:"status"`
-	TotalTickets	 uint		  `json:"totalTickets"`
-	CancelledTickets uint		  `json:"cancelledTickets"`
-	TotalRevenue	 int64		  `json:"totalRevenue"`
+	ID        		 uint		   `json:"id"`
+	UserID    		 uint		   `json:"userId"`
+	User		 	 *UserResponse `json:"user,omitempty"`	
+	OpenAt   		 time.Time	   `json:"openAt"`
+	CloseAt     	 *time.Time	   `json:"closeAt"` 
+	Status    		 string		   `json:"status"`
+	TotalTickets	 uint		   `json:"totalTickets"`
+	CancelledTickets uint		   `json:"cancelledTickets"`
+	TotalRevenue	 int64		   `json:"totalRevenue"`
 }
 
 func NewShiftResponse(shift *m.Shift) ShiftResponse {
+	var userResp *UserResponse
+
+	if shift.User.ID != 0 {
+		resp := NewUserResponse(&shift.User)
+		userResp = &resp
+	}
+
 	return ShiftResponse{
 		ID:      	 	  shift.ID,
 		UserID:  	 	  shift.UserID,
-		User: 	  		  NewUserResponse(&shift.User),
+		User: 	  		  userResp,
 		OpenAt: 	 	  shift.OpenAt,
 		CloseAt:   		  shift.CloseAt,
 		Status:  		  string(shift.Status),
@@ -119,6 +126,28 @@ type TicketLogResponse struct {
 	ToStatus    string    `json:"toStatus"`
 	Remarks     string    `json:"remarks"` 
 	CreatedAt   time.Time `json:"createdAt"`
+}
+
+type TicketTypeResponse struct {
+	ID 			uint		`json:"id"`
+	Name 		string		`json:"name"`
+	Price 		int64		`json:"price"`
+	Description string		`json:"description"`
+	IsActive 	bool		`json:"isActive"`
+	CreatedAt 	time.Time	`json:"createdAt"`
+	UpdatedAt 	time.Time	`json:"updatedAt"`
+}
+
+func NewTicketTypeResponse(tType *m.TicketType) TicketTypeResponse {
+	return TicketTypeResponse{
+		ID: tType.ID,
+		Name: tType.Name,
+		Price: tType.Price,
+		Description: tType.Description,
+		IsActive: tType.IsActive,
+		CreatedAt: tType.CreatedAt,
+		UpdatedAt: tType.UpdatedAt,
+	}
 }
 
 // // newTicketLogResponse is a helper function to create a response body for handling ticket log data

@@ -28,10 +28,9 @@ type UserService interface {
 		phoneNumber string,
 	) error
 
-	DisableUser(ctx context.Context, ID uint) error
-	EnableUser(ctx context.Context, ID uint) error
-	GetUserByID(ctx context.Context, ID uint) (*m.User, error)
-	ListUsers(ctx context.Context, ) ([]m.User, error)
+	UpdateUserStatus(ctx context.Context, id uint, isActive bool) error
+	GetUserByID(ctx context.Context, id uint) (*m.User, error)
+	ListUsers(ctx context.Context) ([]m.User, error)
 }
 
 type userServiceImpl struct {
@@ -92,8 +91,7 @@ func (s *userServiceImpl) RegisterUser(
 	default: return e.NewBadRequest("invalid user role")
 	}
 
-	phoneNumber, err = generateFormattedThaiPhone(phoneNumber)
-	if err != nil {
+	if isValidThaiMobile(phoneNumber) == false {
 		return e.NewBadRequest("invalid phone number")
 	}
 
@@ -130,12 +128,12 @@ func (s *userServiceImpl) UpdateUser(
 	default: return e.NewBadRequest("invalid user role")
 	}
 
-	phoneNumber, err := generateFormattedThaiPhone(phoneNumber)
-	if err != nil {
+	if isValidThaiMobile(phoneNumber) == false {
 		return e.NewBadRequest("invalid phone number")
 	}
 
 	user := &m.User{
+		ID: id,
 		Username: username,
  		Role: validRole,
     	FirstName: firstName,
@@ -146,12 +144,8 @@ func (s *userServiceImpl) UpdateUser(
 	return s.repo.Update(ctx, user)
 }
 
-func (s *userServiceImpl) DisableUser(ctx context.Context, id uint) error {
-	return s.repo.SetActive(ctx, id, false)
-}
-
-func (s *userServiceImpl) EnableUser(ctx context.Context, id uint) error {
-	return s.repo.SetActive(ctx, id, true)
+func (s *userServiceImpl) UpdateUserStatus(ctx context.Context, id uint, isActive bool) error {
+	return s.repo.SetActive(ctx, id, isActive)
 }
 
 func (s *userServiceImpl) GetUserByID(ctx context.Context, id uint) (*m.User, error) {

@@ -4,9 +4,8 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"regexp"
 	"time"
-
-	"github.com/nyaruka/phonenumbers"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -24,12 +23,12 @@ func comparePassword(password string, hashed string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashed), []byte(password))
 }
 
-func generateFormattedThaiPhone(phone string) (string, error) {
-	num, err := phonenumbers.Parse(phone, "TH")
-	if err != nil {
-		return "", err
-	}
-	return phonenumbers.Format(num, phonenumbers.NATIONAL), nil
+func isValidThaiMobile(phone string) bool {
+	reg := regexp.MustCompile(`[^0-9]`)
+	cleaned := reg.ReplaceAllString(phone, "")
+
+	mobileRegex := regexp.MustCompile(`^0[689]\d{8}$`)
+	return mobileRegex.MatchString(cleaned)
 }
 
 // GenerateTicketCode สร้างรหัสตั๋วหน้างานในรูปแบบ: TK-ปีเดือนวัน-รหัสแคชเชียร์-อักษรสุ่ม n หลัก

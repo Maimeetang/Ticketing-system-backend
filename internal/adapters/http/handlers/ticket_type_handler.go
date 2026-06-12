@@ -1,13 +1,12 @@
 package handlers
 
 import (
-	// "strconv"
-	// "ticketing-system/internal/adapters/handler/http/dto"
-	// "ticketing-system/internal/adapters/handler/http/validation"
-	// "ticketing-system/internal/apperror"
-	// "ticketing-system/internal/core/domains"
+	"strconv"
+	dto "ticketing-system/internal/adapters/http/dto"
+	e "ticketing-system/internal/core/error"
 	s "ticketing-system/internal/core/services"
-	// "github.com/gofiber/fiber/v2"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type TicketTypeHandler struct {
@@ -18,103 +17,102 @@ func NewTicketTypeHandler(service s.TicketTypeService) *TicketTypeHandler {
 	return &TicketTypeHandler{service: service}
 }
 
-// POST /tickets/types
-// func (h *TicketTypeHandler) CreatedType(c *fiber.Ctx) error {
-// 	var req dto.TypeReq
+func (h *TicketTypeHandler) CreatedType(c *fiber.Ctx) error {
+	var req dto.TypeReq
 
-// 	if err := c.BodyParser(&req); err != nil {
-// 		return apperror.NewBadRequest("รูปแบบข้อมูลประเภทตั๋วไม่ถูกต้อง")
-// 	}
+	if err := c.BodyParser(&req); err != nil {
+		return e.NewBadRequest("bad request")
+	}
 
-// 	if err := validation.Validate(&req); err != nil {
-// 		return err
-// 	}
+	ctx := c.UserContext()
 
-// 	ticketType := domains.TicketType{
-// 		Name: req.Name,
-// 		Price: req.Price,
-// 		Description: req.Description,
-// 		IsActive: req.IsActive,
-// 	}
+	createdType, err := h.service.CreateTicketType(
+		ctx,req.Name,int64(req.Price),req.Description,
+	)
 
-// 	createdType, err := h.service.CreateTicketType(&ticketType)
+	if err != nil{
+		return err
+	}
 
-// 	if err != nil{
-// 		return err
-// 	}
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"message": "new ticket type created",
+		"data":    dto.NewTicketTypeResponse(createdType),
+	})
+}
 
-// 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-// 		"message": "สร้างประเภทตั๋วสำเร็จ",
-// 		"data":    createdType,
-// 	})
-// }
+func (h *TicketTypeHandler) UpdateType(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	id, err := strconv.ParseUint(idParam, 10, 32)
+	if err != nil {
+		return e.NewBadRequest("invalid id param")
+	}
 
-// // PUT /tickets/types/:id
-// func (h *TicketTypeHandler) UpdateType(c *fiber.Ctx) error {
-// 	idParam := c.Params("id")
-// 	id, err := strconv.ParseUint(idParam, 10, 32)
-// 	if err != nil {
-// 		return apperror.NewBadRequest("id ประเภทตั๋วไม่ถูกต้อง")
-// 	}
+	var req dto.TypeReq
 
-// 	var req dto.TypeReq
+	if err := c.BodyParser(&req); err != nil {
+		return e.NewBadRequest("bad request")
+	}
 
-// 	if err := c.BodyParser(&req); err != nil {
-// 		return apperror.NewBadRequest("รูปแบบข้อมูลประเภทตั๋วไม่ถูกต้อง")
-// 	}
+	ctx := c.UserContext()
+	updatedType, err := h.service.UpdateTicketType(
+		ctx,uint(id),req.Name,int64(req.Price),req.Description,
+	)
 
-// 	if err := validation.Validate(&req); err != nil {
-// 		return err
-// 	}
+	if err != nil{
+		return err
+	}
 
-// 	ticketType := domains.TicketType{
-// 		ID: uint(id),
-// 		Name: req.Name,
-// 		Price: req.Price,
-// 		Description: req.Description,
-// 		IsActive: req.IsActive,
-// 	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "ticket type updated",
+		"data":    dto.NewTicketTypeResponse(updatedType),
+	})
+}
 
-// 	updatedType, err := h.service.UpdateTicketType(&ticketType)
+func (h *TicketTypeHandler) GetTicketType(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	id, err := strconv.ParseUint(idParam, 10, 32)
+	if err != nil {
+		return e.NewBadRequest("invalid id param")
+	}
 
-// 	if err != nil{
-// 		return err
-// 	}
+	ctx := c.UserContext()
+	ticketType, err := h.service.GetTicketType(ctx, uint(id))
 
-// 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-// 		"message": "อัปเดตประเภทตั๋วสำเร็จ",
-// 		"data":    updatedType,
-// 	})
-// }
+	if err != nil{
+		return err
+	}
 
-// // GET /tickets/types/:id
-// func (h *TicketTypeHandler) GetTicketType(c *fiber.Ctx) error {
-// 	idParam := c.Params("id")
-// 	id, err := strconv.ParseUint(idParam, 10, 32)
-// 	if err != nil {
-// 		return apperror.NewBadRequest("id ประเภทตั๋วไม่ถูกต้อง")
-// 	}
+	return c.Status(fiber.StatusOK).
+		JSON(dto.NewTicketTypeResponse(ticketType))
+}
 
-// 	ticketType, err := h.service.GetTicketType(uint(id))
+func (h *TicketTypeHandler) ListTicketType(c *fiber.Ctx) error {
+	withDisableStr := c.Query("withDisable")
 
-// 	if err != nil{
-// 		return err
-// 	}
+	var withDisableBool bool
+	var err error
 
-// 	if ticketType == nil {
-// 		return apperror.NewNotFound("ไม่พบประเภทตั๋ว")
-// 	}
+	if withDisableStr != "" {
+		withDisableBool, err = strconv.ParseBool(withDisableStr)
+		if err != nil {
+			return e.NewBadRequest("invalid withDisable query param (must be true or false)")
+		}
+	} else {
+		withDisableBool = false
+	}
 
-// 	return c.Status(fiber.StatusOK).JSON(ticketType)
-// }
+	ctx := c.UserContext()
 
-// // GET /tickets/types
-// func (h *TicketTypeHandler) ListTicketType(c *fiber.Ctx) error {
-// 	types, err := h.service.ListTicketType()
+	types, err := h.service.ListTicketType(ctx, withDisableBool)
 
-// 	if err != nil{
-// 		return err
-// 	}
+	if err != nil{
+		return err
+	}
 
-// 	return c.Status(fiber.StatusOK).JSON(types)
-// }
+	typesList := make([]dto.TicketTypeResponse, len(types))
+	for i := range types {
+		typesList[i] = dto.NewTicketTypeResponse(&types[i])
+	}
+
+	return c.Status(fiber.StatusOK).JSON(typesList)
+}

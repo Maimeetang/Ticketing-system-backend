@@ -13,7 +13,7 @@ type ShiftService interface {
 	CloseShift(ctx context.Context, id uint) error
 	GetCurrentShift(ctx context.Context, userID uint) (*m.Shift, error)
 	GetShiftByID(ctx context.Context, id uint) (*m.Shift, error)
-	GetShiftByDate(ctx context.Context, date string) (*m.Shift, error)
+	GetShiftByDate(ctx context.Context, date string) ([]m.Shift, error)
 }
 
 type shiftServiceImpl struct {
@@ -132,20 +132,16 @@ func (s *shiftServiceImpl) GetShiftByID(
 func (s *shiftServiceImpl) GetShiftByDate(
 	ctx context.Context, 
 	dateStr string,
-) (*m.Shift, error) {
+) ([]m.Shift, error) {
 	targetDate, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		return nil, e.NewBadRequest("invalid date format, please use YYYY-MM-DD")
 	}
 
-	shift, err := s.shiftRepo.GetByDate(ctx, targetDate)
+	shifts, err := s.shiftRepo.GetByDate(ctx, targetDate)
 	if err != nil {
 		return nil, err
 	}
 
-	if shift == nil {
-		return nil, e.NewNotFound("shift not found")
-	}
-
-	return shift, nil
+	return shifts, nil
 }

@@ -37,7 +37,7 @@ func main() {
 
 	err = gormDB.AutoMigrate(&m.Shift{}, &m.Ticket{}, &m.TicketType{}, &m.User{}, &m.TicketLog{})
 	if err != nil {
-		log.Fatalf("❌ AutoMigration failed: %v", err)
+		log.Fatalf("AutoMigration failed: %v", err)
 	}
 
 	seed.SeedAdminAccount(
@@ -113,19 +113,17 @@ func main() {
 
 	secured.Post("/users", userHandler.RegisterUser)
 	secured.Put("/users/:id", userHandler.UpdateUser)
-	secured.Patch("/users/:id/disable", userHandler.DisableUser)
-	secured.Patch("/users/:id/enable", userHandler.EnableUser)
+	secured.Patch("/users/:id/status", userHandler.UpdateUserStatus)
 	secured.Get("/users/:id", userHandler.GetUserByID)
 	secured.Get("/users", userHandler.ListUsers)
 
 	// Shift Management
 
-	secured.Get("/shifts/:id", shiftHandler.GetShiftByID)
-	secured.Get("/shifts/by-date", shiftHandler.GetShiftByDate)
+	secured.Get("/shifts", shiftHandler.GetShiftByDate)
 
 	// Ticket Management
 
-	secured.Get("/tickets/:id", shiftHandler.GetShiftByID)
+	secured.Get("/tickets/:id", ticketHandler.GetTicket)
 
 	// ==========================================
 	//  Admin, Cashier
@@ -134,8 +132,9 @@ func main() {
 	// Shift Management
 
 	secured.Post("/shifts/open", shiftHandler.OpenShift)
-	secured.Patch("/shifts/:id/close", shiftHandler.CloseShift)
 	secured.Get("/shifts/current", shiftHandler.GetCurrentShift)
+	secured.Get("/shifts/:id", shiftHandler.GetShiftByID)
+	secured.Patch("/shifts/:id/close", shiftHandler.CloseShift)
 
 	// Ticket Management
 

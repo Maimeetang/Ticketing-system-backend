@@ -6,6 +6,7 @@ import (
 	e "ticketing-system/internal/core/error"
 	s "ticketing-system/internal/core/services"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -16,6 +17,8 @@ type UserHandler struct {
 func NewUserHandler(service s.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
+
+var validate = validator.New()
 
 func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 	var req dto.CreateUserRequest
@@ -74,32 +77,30 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	})
 }
 
-func (h *UserHandler) DisableUser(c *fiber.Ctx) error {
+func (h *UserHandler) UpdateUserStatus(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
 		return e.NewBadRequest("invalid id param")
 	}
 
-	ctx := c.UserContext()
-
-	if err := h.service.DisableUser(ctx, uint(id)); err != nil {
-		return err
+	var req dto.UpdateUserStatusRequest
+	if err := c.BodyParser(&req); err != nil {
+		return e.NewBadRequest("bad request")
 	}
-	return c.SendStatus(fiber.StatusOK)
-}
 
-func (h *UserHandler) EnableUser(c *fiber.Ctx) error {
-	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
-	if err != nil {
-		return e.NewBadRequest("invalid id param")
+	if err := validate.Struct(req); err != nil {
+		return e.NewBadRequest(err.Error())
 	}
 
 	ctx := c.UserContext()
 
-	if err := h.service.EnableUser(ctx, uint(id)); err != nil {
+	if err := h.service.UpdateUserStatus(ctx, uint(id), *req.IsActive); err != nil {
 		return err
 	}
-	return c.SendStatus(fiber.StatusOK)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "user updated",
+	})
 }
 
 func (h *UserHandler) GetUserByID(c *fiber.Ctx) error {

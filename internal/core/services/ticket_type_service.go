@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	e "ticketing-system/internal/core/error"
 	m "ticketing-system/internal/core/models"
 	r "ticketing-system/internal/core/repositories"
 )
@@ -20,8 +21,7 @@ type TicketTypeService interface {
 		price int64, 
 		desc string,
 	) (*m.TicketType, error)
-	EnableTicketType(ctx context.Context, id uint) error
-	DisableTicketType(ctx context.Context, id uint) error
+	UpdateTicketTypeStatus(ctx context.Context, id uint, isActive bool) error
 	GetTicketType(ctx context.Context, id uint) (*m.TicketType, error)
 	ListTicketType(ctx context.Context, withDisable bool) ([]m.TicketType, error)
 }
@@ -40,6 +40,10 @@ func (s *ticketTypeServiceImpl) CreateTicketType(
 	price int64, 
 	desc string,
 ) (*m.TicketType, error) {
+	if price < 0 {
+		return nil, e.NewBadRequest("price must be greater than 0")
+	}
+
 	Ttype := &m.TicketType{
 		Name: name,
 		Price: price,
@@ -57,6 +61,10 @@ func (s *ticketTypeServiceImpl) UpdateTicketType(
 	price int64, 
 	desc string,
 ) (*m.TicketType, error) {
+	if price < 0 {
+		return nil, e.NewBadRequest("price must be greater than 0")
+	}
+
 	Ttype := &m.TicketType{
 		ID: id,
 		Name: name,
@@ -67,7 +75,12 @@ func (s *ticketTypeServiceImpl) UpdateTicketType(
 }
 
 func (s *ticketTypeServiceImpl) GetTicketType(ctx context.Context, id uint) (*m.TicketType, error) {
-	return s.repo.GetByID(ctx, id)
+	tType, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return tType, nil
 }
 
 func (s *ticketTypeServiceImpl) ListTicketType(
@@ -76,10 +89,6 @@ func (s *ticketTypeServiceImpl) ListTicketType(
 	return s.repo.List(ctx, withDisable)
 }
 
-func (s *ticketTypeServiceImpl) EnableTicketType(ctx context.Context, id uint) error {
-	return s.repo.SetActive(ctx, id, true)
-}
-
-func (s *ticketTypeServiceImpl) DisableTicketType(ctx context.Context, id uint) error {
-	return s.repo.SetActive(ctx, id, false)
+func (s *ticketTypeServiceImpl) UpdateTicketTypeStatus(ctx context.Context, id uint, isActive bool) error {
+	return s.repo.SetActive(ctx, id, isActive)
 }

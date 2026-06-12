@@ -89,13 +89,22 @@ func (h *ShiftHandler) GetShiftByID(c *fiber.Ctx) error {
 }
 
 func (h *ShiftHandler) GetShiftByDate(c *fiber.Ctx) error {
-	date := c.Params("date")
+	dateStr := c.Query("date")
+	if dateStr == "" {
+		return e.NewBadRequest("query parameter 'date' is required")
+	}
 
 	ctx := c.UserContext()
 
-	shift, err := h.service.GetShiftByDate(ctx,date)
+	shifts, err := h.service.GetShiftByDate(ctx,dateStr)
 	if err != nil {
 		return err
 	}
-	return c.Status(fiber.StatusOK).JSON(dto.NewShiftResponse(shift))
+
+	shiftsList := make([]dto.ShiftResponse, len(shifts))
+	for i := range shifts {
+		shiftsList[i] = dto.NewShiftResponse(&shifts[i])
+	}
+
+	return c.Status(fiber.StatusOK).JSON(shiftsList)
 }

@@ -13,6 +13,6 @@ type ShiftRepository interface {
 	GetByIDForUpdate(ctx context.Context, id uint) (*m.Shift, error)
 	GetCurrentByUserID(ctx context.Context, userID uint) (*m.Shift, error)
 	GetCurrentByUserIDForUpdate(ctx context.Context, userID uint) (*m.Shift, error)
-	GetByDate(ctx context.Context, date time.Time) (*m.Shift, error)
+	GetByDate(ctx context.Context, date time.Time) ([]m.Shift, error)
 	CalculateSummary(ctx context.Context, shift *m.Shift) error
 }
