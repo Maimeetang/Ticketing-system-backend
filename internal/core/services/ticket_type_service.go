@@ -80,6 +80,10 @@ func (s *ticketTypeServiceImpl) GetTicketType(ctx context.Context, id uint) (*m.
 		return nil, err
 	}
 
+	if tType == nil {
+		return nil, e.NewNotFound("ticket type not found")
+	}
+
 	return tType, nil
 }
 

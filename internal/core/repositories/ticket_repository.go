@@ -10,5 +10,5 @@ type TicketRepository interface {
 	GetByID(ctx context.Context, id uint) (*m.Ticket, error)
 	GetByCodeForUpdate(ctx context.Context, ticketcode string) (*m.Ticket, error)
 	Update(ctx context.Context, ticket *m.Ticket) error
-	// GetByShiftID(ctx context.Context, shiftID uint) ([]domain.Ticket, error)
+	GetByShiftID(ctx context.Context, shiftID uint) ([]m.Ticket, error)
 }

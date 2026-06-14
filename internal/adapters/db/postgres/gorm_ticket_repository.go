@@ -36,9 +36,29 @@ func (r *gormTicketRepository) GetByID(
 	var ticket m.Ticket
 	db := bind(ctx, r.db)
 
-	err := db.WithContext(ctx).First(&ticket, id).Error
+	err := db.First(&ticket, id).Error
 
-	return &ticket, handleError(err)
+	if err != nil {
+        return nil, handleError(err)
+    }
+
+	return &ticket, nil
+}
+
+func (r *gormTicketRepository) GetByShiftID(
+	ctx context.Context,
+	shiftid uint,
+) ([]m.Ticket, error) {
+	var tickets []m.Ticket
+	db := bind(ctx, r.db)
+
+	err := db.Find(&tickets, "shift_id = ?", shiftid).Error
+
+	if err != nil {
+        return nil, handleError(err)
+    }
+
+	return tickets, nil
 }
 
 func (r *gormTicketRepository) GetByCodeForUpdate(
@@ -53,7 +73,11 @@ func (r *gormTicketRepository) GetByCodeForUpdate(
 		Where("ticket_code = ?", code).
 		First(&ticket).Error
 
-	return &ticket, handleError(err)
+	if err != nil {
+        return nil, handleError(err)
+    }
+
+	return &ticket, nil
 }
 
 func (r *gormTicketRepository) Update(

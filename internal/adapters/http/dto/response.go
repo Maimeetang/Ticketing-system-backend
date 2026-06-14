@@ -76,6 +76,10 @@ type TicketResponse struct {
 }
 
 func NewTicketResponse(ticket *m.Ticket) TicketResponse {
+	if ticket == nil {
+		return TicketResponse{}
+	}
+
 	return TicketResponse{
 		ID:           ticket.ID,
 		ShiftID:      ticket.ShiftID,
@@ -92,9 +96,9 @@ func NewTicketResponse(ticket *m.Ticket) TicketResponse {
 }
 
 type TicketUpdateResponse struct {
-	Status string
-	Message string
-	Ticket TicketResponse
+	Status string			`json:"status"`
+	Message string			`json:"message"`
+	Ticket *TicketResponse	`json:"ticket,omitempty"`
 }
 
 func NewTicketUpdateResponse(result *s.StatusUpdateResult) TicketUpdateResponse {
@@ -111,11 +115,17 @@ func NewTicketUpdateResponse(result *s.StatusUpdateResult) TicketUpdateResponse 
 		message = "Ticket cancellation successful"
 	}
 
-	return TicketUpdateResponse{
-		Status: string(result.Status),
+	res := TicketUpdateResponse{
+		Status:  string(result.Status),
 		Message: message,
-		Ticket: NewTicketResponse(result.Ticket),
 	}
+
+	if result.Ticket != nil {
+		ticketRes := NewTicketResponse(result.Ticket)
+		res.Ticket = &ticketRes
+	}
+
+	return res
 }
 
 type TicketLogResponse struct {

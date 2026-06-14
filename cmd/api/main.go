@@ -68,6 +68,7 @@ func main() {
 	userService := s.NewUserService(userRepo)
 	shiftService := s.NewShiftService(transactor, shiftRepo, userRepo)
 	ticketService := s.NewTicketService(transactor, shiftRepo, ticketRepo, ticketLogRepo, ticketTypeRepo)
+	ticketTypeService := s.NewTicketTypeService(ticketTypeRepo)
 
 	// ==========================================
 	// INITIALIZE HTTP HANDLERS (PRESENTATION LAYER)
@@ -77,6 +78,7 @@ func main() {
 	userHandler := h.NewUserHandler(userService)
 	shiftHandler := h.NewShiftHandler(shiftService)
 	ticketHandler := h.NewTicketHandler(ticketService)
+	ticketTypeHandler := h.NewTicketTypeHandler(ticketTypeService)
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -104,12 +106,9 @@ func main() {
 	api.Post("/auth/logout", authHandler.Logout)
 
 	secured := api.Use(middleware.AuthRequired(cfg.JwtSecret))
+	secured.Get("/auth/me", authHandler.GetProfile)
 
-	// ==========================================
-	// 	Admin
-	// ==========================================
-
-	// User Management (Admin Only)
+	// User Management
 
 	secured.Post("/users", userHandler.RegisterUser)
 	secured.Put("/users/:id", userHandler.UpdateUser)
@@ -120,34 +119,26 @@ func main() {
 	// Shift Management
 
 	secured.Get("/shifts", shiftHandler.GetShiftByDate)
+	secured.Get("/shifts/current", shiftHandler.GetCurrentShift)
+	secured.Post("/shifts/open", shiftHandler.OpenShift)
+	secured.Get("/shifts/:id", shiftHandler.GetShiftByID)
+	secured.Patch("/shifts/:id/close", shiftHandler.CloseShift)
+
 
 	// Ticket Management
 
 	secured.Get("/tickets/:id", ticketHandler.GetTicket)
-
-	// ==========================================
-	//  Admin, Cashier
-	// ==========================================
-
-	// Shift Management
-
-	secured.Post("/shifts/open", shiftHandler.OpenShift)
-	secured.Get("/shifts/current", shiftHandler.GetCurrentShift)
-	secured.Get("/shifts/:id", shiftHandler.GetShiftByID)
-	secured.Patch("/shifts/:id/close", shiftHandler.CloseShift)
-
-	// Ticket Management
-
+	secured.Get("/tickets/shifts/:shiftId", ticketHandler.GetTicketByShift)
 	secured.Post("/tickets/sell", ticketHandler.CreateTicket)
-	secured.Patch("/tickets/cancel", ticketHandler.CancelTicket)
+	secured.Patch("/tickets/cancel/:code", ticketHandler.CancelTicket)
+	secured.Patch("/tickets/use/:code", ticketHandler.UseTicket)
 
-	// ==========================================
-	//  Admin, Scanner
-	// ==========================================
-
-	// Ticket Management
-
-	secured.Post("/tickets/use", ticketHandler.UseTicket)
+	// Ticket type Management
+	secured.Get("/ticket-types", ticketTypeHandler.ListTicketType)
+	secured.Post("/ticket-types", ticketTypeHandler.CreatedType)
+	secured.Get("/ticket-types/:id", ticketTypeHandler.GetTicketType)
+	secured.Put("/ticket-types/:id", ticketTypeHandler.UpdateTicketType)
+	secured.Patch("/ticket-types/:id", ticketTypeHandler.UpdateTicketTypeStatus)
 
 	// ==========================================
 	// START APPLICATION SERVER

@@ -3,8 +3,11 @@ package handlers
 import (
 	e "ticketing-system/internal/core/error"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
+
+var validate = validator.New()
 
 func getUserID(c *fiber.Ctx) (uint, error) {
 	userIDLocal := c.Locals("user_id")

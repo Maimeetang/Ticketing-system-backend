@@ -6,7 +6,6 @@ import (
 	e "ticketing-system/internal/core/error"
 	s "ticketing-system/internal/core/services"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -17,8 +16,6 @@ type UserHandler struct {
 func NewUserHandler(service s.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
-
-var validate = validator.New()
 
 func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 	var req dto.CreateUserRequest

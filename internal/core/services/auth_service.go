@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	e "ticketing-system/internal/core/error"
+	m "ticketing-system/internal/core/models"
 	r "ticketing-system/internal/core/repositories"
 	"time"
 
@@ -16,6 +17,7 @@ type AuthService interface {
 		password string,
 		JWTSecret string,
 	) (string, error)
+	GetProfile(ctx context.Context, id uint) (*m.User, error)
 }
 
 type authServiceImpl struct {
@@ -58,4 +60,17 @@ func (s *authServiceImpl) Login(
 	}
 
 	return tokenString, nil
+}
+
+func (s *authServiceImpl) GetProfile(ctx context.Context, id uint) (*m.User, error) {
+	user, err := s.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		return nil, e.NewNotFound("user not found")
+	}
+
+	return user, nil
 }

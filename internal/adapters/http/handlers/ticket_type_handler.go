@@ -40,7 +40,7 @@ func (h *TicketTypeHandler) CreatedType(c *fiber.Ctx) error {
 	})
 }
 
-func (h *TicketTypeHandler) UpdateType(c *fiber.Ctx) error {
+func (h *TicketTypeHandler) UpdateTicketType(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	id, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
@@ -65,6 +65,29 @@ func (h *TicketTypeHandler) UpdateType(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "ticket type updated",
 		"data":    dto.NewTicketTypeResponse(updatedType),
+	})
+}
+
+func (h *TicketTypeHandler) UpdateTicketTypeStatus(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	id, err := strconv.ParseUint(idParam, 10, 32)
+	if err != nil {
+		return e.NewBadRequest("invalid id param")
+	}
+
+	var req dto.UpdateTypeStatusReq
+	if err := validate.Struct(req); err != nil {
+		return e.NewBadRequest(err.Error())
+	}
+
+	ctx := c.UserContext()
+
+	if err = h.service.UpdateTicketTypeStatus(ctx,uint(id),*req.IsActive); err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "ticket type status updated",
 	})
 }
 

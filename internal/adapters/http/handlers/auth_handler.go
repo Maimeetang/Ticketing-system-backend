@@ -67,3 +67,22 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 		"message": "Logout สำเร็จ",
 	})
 }
+
+func (h *AuthHandler) GetProfile(c *fiber.Ctx) error {
+	id, err := getUserID(c)
+	if err != nil {
+		return err
+	}
+
+	ctx := c.UserContext()
+
+	proflie, err := h.authService.GetProfile(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message":  "Login สำเร็จ",
+		"data": dto.NewUserResponse(proflie),
+	})
+}

@@ -40,3 +40,7 @@ type TypeReq struct {
 	Price       float64 `json:"price"`
 	Description string  `json:"description"`
 }
+
+type UpdateTypeStatusReq struct {
+	IsActive *bool `json:"isActive" validate:"required"`
+}

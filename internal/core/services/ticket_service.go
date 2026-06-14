@@ -47,6 +47,10 @@ type TicketService interface {
 	GetTicketByID(
 		ctx context.Context, id uint,
 	) (*m.Ticket, error)
+
+	GetTicketByShiftID(
+		ctx context.Context, shiftId uint,
+	) ([]m.Ticket, error)
 }
 
 type ticketServiceImpl struct {
@@ -141,6 +145,12 @@ func (s *ticketServiceImpl) GetTicketByID(
 	id uint,
 ) (*m.Ticket, error) {
 	return s.ticketRepo.GetByID(ctx, id)
+}
+
+func (s *ticketServiceImpl) GetTicketByShiftID(
+	ctx context.Context, shiftId uint,
+) ([]m.Ticket, error) {
+	return s.ticketRepo.GetByShiftID(ctx, shiftId)
 }
 
 // Private Helper Transaction Function Service
