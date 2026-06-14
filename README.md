@@ -32,7 +32,7 @@
    cp env.example .env
    ```
 
-   _Open `.env` and configure your Database URL, JWT Secret, and Gate Validation API keys._
+   _Open `.env` and configure your environment
 
    <br>
 
