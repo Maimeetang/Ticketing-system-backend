@@ -68,7 +68,9 @@ func (h *ShiftHandler) GetCurrentShift(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(dto.NewShiftResponse(shift))
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": dto.NewShiftResponse(shift),
+	})
 }
 
 func (h *ShiftHandler) GetShiftByID(c *fiber.Ctx) error {
@@ -85,7 +87,9 @@ func (h *ShiftHandler) GetShiftByID(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(dto.NewShiftResponse(shift))
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": dto.NewShiftResponse(shift),
+	})
 }
 
 func (h *ShiftHandler) GetShiftByDate(c *fiber.Ctx) error {
@@ -106,5 +110,7 @@ func (h *ShiftHandler) GetShiftByDate(c *fiber.Ctx) error {
 		shiftsList[i] = dto.NewShiftResponse(&shifts[i])
 	}
 
-	return c.Status(fiber.StatusOK).JSON(shiftsList)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": shiftsList,
+	})
 }

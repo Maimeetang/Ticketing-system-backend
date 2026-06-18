@@ -115,7 +115,9 @@ func (h *UserHandler) GetUserByID(c *fiber.Ctx) error {
 
 	res := dto.NewUserResponse(user)
 
-	return c.Status(fiber.StatusOK).JSON(res)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": res,
+	})
 }
 
 func (h *UserHandler) ListUsers(c *fiber.Ctx) error {
@@ -132,5 +134,7 @@ func (h *UserHandler) ListUsers(c *fiber.Ctx) error {
 	}
 	
 
-	return c.Status(fiber.StatusOK).JSON(resList)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": resList,
+	})
 }

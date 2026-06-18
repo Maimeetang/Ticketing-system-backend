@@ -12,6 +12,7 @@ import (
 	m "ticketing-system/internal/core/models"
 	s "ticketing-system/internal/core/services"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/driver/postgres"

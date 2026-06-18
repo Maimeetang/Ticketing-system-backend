@@ -4,7 +4,7 @@
 
 - This project utilizes hexagonal architecture inspired by https://www.tomkdickinson.co.uk/hexagonal-architecture-with-go-and-google-wire-e4344dd24b94
 
-- For frontend please visit https://github.com/Maimeetang/Ticketing-system-frontend
+- For frontend please visit https://github.com/Maimeetang/Ticketing-system-frontend (developing)
 
 <br>
 
@@ -32,7 +32,7 @@
    cp env.example .env
    ```
 
-   _Open `.env` and configure your environment
+   Open `.env` and configure your environment
 
    <br>
 
@@ -64,6 +64,43 @@
 
 ## API Documentation
 
-- Response Format: JSend (https://github.com/omniti-labs/jsend)
+The API collection files are located in the `/postman` directory.
 
-- More documents will be added in the future.
+To test and interact with the endpoints live:
+
+1. Open your **Postman** desktop application.
+2. Click the **Import** button in the top-left corner.
+3. Drag and drop the `.json` collection file from the `/postman` folder.
+
+### API Response Format
+
+The API follows a strict JSON response pattern to ensure consistency across all endpoints.
+
+#### Success Responses
+
+- **With Data:** Returns HTTP 200/201 with a `data` object.
+  ```json
+  {
+    "data": {
+      "id": 1,
+      "username": "somchai"
+    }
+  }
+  ```
+- **Message Only:** Returns HTTP 200 with a `message` string (e.g., for actions without return data).
+  ```json
+  {
+    "message": "User registered successfully"
+  }
+  ```
+
+#### Error Responses
+
+Returns appropriate HTTP error status codes (e.g., 400, 401, 404, 500) along with a structured error object.
+
+```json
+{
+  "status": "error",
+  "message": "Password must be at least 8 characters long"
+}
+```

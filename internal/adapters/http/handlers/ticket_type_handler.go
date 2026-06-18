@@ -106,7 +106,9 @@ func (h *TicketTypeHandler) GetTicketType(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).
-		JSON(dto.NewTicketTypeResponse(ticketType))
+		JSON(fiber.Map{
+			"data": dto.NewTicketTypeResponse(ticketType),
+		})
 }
 
 func (h *TicketTypeHandler) ListTicketType(c *fiber.Ctx) error {
@@ -137,5 +139,7 @@ func (h *TicketTypeHandler) ListTicketType(c *fiber.Ctx) error {
 		typesList[i] = dto.NewTicketTypeResponse(&types[i])
 	}
 
-	return c.Status(fiber.StatusOK).JSON(typesList)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"data": typesList,
+		})
 }

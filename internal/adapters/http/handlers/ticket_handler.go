@@ -58,7 +58,9 @@ func (h *TicketHandler) GetTicket(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(dto.NewTicketResponse(ticket))
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"data": dto.NewTicketResponse(ticket),
+	})
 }
 
 func (h *TicketHandler) GetTicketByShift(c *fiber.Ctx) error {
@@ -79,7 +81,9 @@ func (h *TicketHandler) GetTicketByShift(c *fiber.Ctx) error {
 		resList[i] = dto.NewTicketResponse(&tickets[i])
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(resList)
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"data": resList,
+	})
 }
 
 func (h *TicketHandler) UseTicket(c *fiber.Ctx) error {
@@ -97,9 +101,9 @@ func (h *TicketHandler) UseTicket(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(
-		dto.NewTicketUpdateResponse(result),
-	)
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"data": dto.NewTicketUpdateResponse(result),
+	})
 }
 
 func (h *TicketHandler) CancelTicket(c *fiber.Ctx) error {
@@ -123,7 +127,7 @@ func (h *TicketHandler) CancelTicket(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(
-		dto.NewTicketUpdateResponse(result),
-	)
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"data": dto.NewTicketUpdateResponse(result),
+	})
 }
