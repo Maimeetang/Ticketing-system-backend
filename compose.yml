@@ -1,0 +1,48 @@
+name: cloud-pos
+services:
+  backend:
+    image: cloud-pos-backend:latest
+    container_name: cloud-pos-backend
+    ports:
+      - "${PORT}:8080"
+    environment:
+      - PORT=${PORT}
+      - APP_ENV=${APP_ENV}
+      - JWT_SECRET=${JWT_SECRET}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - DEFAULT_ADMIN_USERNAME=${DEFAULT_ADMIN_USERNAME}
+      - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD}
+      - DEFAULT_ADMIN_FIRSTNAME=${DEFAULT_ADMIN_FIRSTNAME}
+      - DEFAULT_ADMIN_LASTNAME=${DEFAULT_ADMIN_LASTNAME}
+      - DEFAULT_ADMIN_PHONENUMBER=${DEFAULT_ADMIN_PHONENUMBER}
+    restart: unless-stopped
+    command: ["./main"]
+    depends_on:
+      - postgres
+    networks:
+      - cloud-pos-net
+  postgres:
+    image: postgres:18-alpine
+    container_name: cloud-pos-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    restart: unless-stopped
+    networks:
+      - cloud-pos-net
+
+volumes:
+  postgres_data:
+
+networks:
+  cloud-pos-net:
+    external: true
